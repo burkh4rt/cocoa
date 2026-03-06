@@ -1,0 +1,32 @@
+%YAML 1.2
+---
+n_bins: !!int 10
+fused: !!bool true
+
+collated_inputs:
+  - ./processed/meds.parquet
+
+subject_splits: ./processed/subject_splits.parquet
+
+ordering:
+  - BOS
+  - AGE
+  - SEX
+  - RACE
+  - ETHN
+  - ADMN
+  - XFR-OUT
+  - XFR-IN
+  - MED-CTS
+  - MED-INT
+  - LAB-ORD
+  - LAB-RES
+  - CODE
+  - VTL
+  - ASMT
+  - RESP
+  - POSN
+  - CRRT
+  - SOFA
+  - DSCG
+  - EOS

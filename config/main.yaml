@@ -1,0 +1,7 @@
+%YAML 1.2
+---
+data_home: /gpfs/data/bbj-lab/users/burkh4rt/data-raw/mimic-2.1.0
+processed_data_home: ./processed
+
+collation_config: ./config/collation/clif-21.yaml
+tokenization_config: ./config/tokenization/clif-21.yaml
