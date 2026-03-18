@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-data_home: /gpfs/data/bbj-lab/users/burkh4rt/data-raw/mimic-2.1.0
+data_home: ~/Downloads/development-sample-21/raw-mimic/dev
 processed_data_home: ./processed
 
 collation_config: ./config/collation/clif-21.yaml

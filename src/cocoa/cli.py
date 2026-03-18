@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-CLI for cocoa - collation and tokenization of clinical data
+CLI for cocoa - configurablecollation and tokenization of clinical data
 """
 
 import pathlib
@@ -102,20 +102,15 @@ def info():
 
 
 @app.command()
-def test(
-    verbose: Annotated[
-        bool, typer.Option("--verbose", "-v", help="Show individual test results")
-    ] = False,
-):
+def test():
     """
     Run the test suite.
     """
     import subprocess
     import sys
 
-    args = [sys.executable, "-m", "pytest", "tests/"]
-    if verbose:
-        args.append("-v")
+    # Always run pytest with verbose output by default
+    args = [sys.executable, "-m", "pytest", "tests/", "-vv", "-r", "a", "-s"]
     raise SystemExit(subprocess.call(args))
 
 

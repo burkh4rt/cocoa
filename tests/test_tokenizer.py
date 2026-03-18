@@ -1,7 +1,5 @@
 import datetime
-import gzip
 import pathlib
-import pickle
 import tempfile
 
 import polars as pl
@@ -9,7 +7,6 @@ import pytest
 from omegaconf import OmegaConf
 
 from cocoa.tokenizer import Tokenizer
-from cocoa.vocabulary import Vocabulary
 
 
 def _make_collated_data(tmp_path: pathlib.Path):
@@ -84,10 +81,11 @@ def _make_tokenizer(tmp_path: pathlib.Path, *, fused: bool = True, n_bins: int =
     tkzr = object.__new__(Tokenizer)
     tkzr.cfg = cfg
     tkzr.data_home = tmp_path
-    tkzr.vocab = Vocabulary(is_training=True)
+    tkzr.lookup = None
     tkzr.bins = None
     tkzr.subject_splits = None
-    tkzr._is_training = True
+    tkzr.is_training = True
+    tkzr.created_dttm = datetime.datetime.now().isoformat()
     return tkzr
 
 
@@ -149,9 +147,7 @@ def test_fused_tokenization_one_token_per_event(tokenizer):
     df = tokenizer.add_ends(df)
     df = tokenizer.bin_data(df)
     df = df.join(tokenizer.subject_splits, on="subject_id", validate="m:1")
-    result = tokenizer.get_tokens_from_binned_data(
-        df.filter(pl.col("split") == "train")
-    ).collect()
+    result = tokenizer.tokenize_data(df.filter(pl.col("split") == "train")).collect()
     # each row should have a list of exactly 1 token
     assert all(len(t) == 1 for t in result["tokens"].to_list())
 
@@ -163,9 +159,7 @@ def test_unfused_tokenization_multiple_tokens(unfused_tokenizer):
     df = tkzr.add_ends(df)
     df = tkzr.bin_data(df)
     df = df.join(tkzr.subject_splits, on="subject_id", validate="m:1")
-    result = tkzr.get_tokens_from_binned_data(
-        df.filter(pl.col("split") == "train")
-    ).collect()
+    result = tkzr.tokenize_data(df.filter(pl.col("split") == "train")).collect()
     lab_rows = result.filter(pl.col("code").str.starts_with("LAB"))
     sex_rows = result.filter(pl.col("code").str.starts_with("SEX"))
     # labs: code token + binned_value token = 2
@@ -184,7 +178,7 @@ def test_get_all_produces_one_row_per_subject(tokenizer):
 def test_get_all_timelines_start_with_bos(tokenizer):
     """Every timeline should begin with BOS token (token 1)."""
     result = tokenizer.get_all().collect()
-    bos_token = tokenizer.vocab("BOS")
+    bos_token = tokenizer.lookup["BOS"]
     for tokens in result["tokens"].to_list():
         assert tokens[0] == bos_token
 
@@ -192,7 +186,7 @@ def test_get_all_timelines_start_with_bos(tokenizer):
 def test_get_all_timelines_contain_eos(tokenizer):
     """Every timeline should contain an EOS token."""
     result = tokenizer.get_all().collect()
-    eos_token = tokenizer.vocab("EOS")
+    eos_token = tokenizer.lookup["EOS"]
     for tokens in result["tokens"].to_list():
         assert eos_token in tokens
 
@@ -200,8 +194,7 @@ def test_get_all_timelines_contain_eos(tokenizer):
 def test_vocab_frozen_after_get_all(tokenizer):
     """After get_all, the tokenizer and its vocab should be frozen."""
     tokenizer.get_all().collect()
-    assert not tokenizer.is_training
-    assert not tokenizer.vocab.is_training
+    assert isinstance(tokenizer.lookup, dict)
 
 
 def test_contains(tokenizer):
@@ -232,14 +225,13 @@ def test_save_all_writes_files(tokenizer):
         out = pathlib.Path(tmp_dir) / "output"
         tokenizer.save_all(path=out)
         assert (out / "tokens_times.parquet").exists()
-        assert (out / "tkzr.pkl.gz").exists()
+        assert (out / "tokenizer.yaml").exists()
         # can read parquet back
         df = pl.read_parquet(out / "tokens_times.parquet")
         assert len(df) == 4
-        # can unpickle
-        with gzip.open(out / "tkzr.pkl.gz", "rb") as f:
-            loaded = pickle.load(f)
-        assert len(loaded) == len(tokenizer)
+        # can load tokenizer yaml
+        restored = tokenizer.load(out / "tokenizer.yaml")
+        assert len(restored) == len(tokenizer)
 
 
 def test_save_and_load_yaml(tokenizer):

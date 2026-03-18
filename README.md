@@ -16,11 +16,11 @@ uv run cocoa --help
 
 ## Overview
 
-Cocoa does two things: **collation** and **tokenization**.
+Cocoa does two things: **(1) collation** and **(2) tokenization**.
 
-### Collation
+### (1) Collation
 
-The collator reads raw data tables (parquet or CSV) and combines them into a
+The collator pulls from raw data tables (parquet or CSV) and combines them into a
 single denormalized dataframe in a
 [MEDS](https://github.com/Medical-Event-Data-Standard/meds)-like format. Each row
 in the output represents an event with a `subject_id`, `time`, `code`, and
@@ -37,7 +37,7 @@ Collation is driven by a YAML config that specifies:
 - **Subject splits** (`train_frac` / `tuning_frac`) that partition subjects
   chronologically into train, tuning, and held-out sets.
 
-### Tokenization
+### (2) Tokenization
 
 The tokenizer consumes the collated parquet output and converts events into
 integer token sequences suitable for sequence models. It:

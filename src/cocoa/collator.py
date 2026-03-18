@@ -131,7 +131,10 @@ class Collator:
 
         return df.select(
             pl.col(self.cfg["subject_id"]).cast(pl.String).alias("subject_id"),
-            pl.col(time).cast(pl.Datetime(time_zone="UTC")).alias("time"),
+            pl.col(time)
+            .cast(pl.Datetime)
+            .dt.replace_time_zone(time_zone=None)
+            .alias("time"),
             pl.concat_str(
                 [
                     pl.lit(prefix),
@@ -159,7 +162,7 @@ class Collator:
         """get all tokens for all events as configured"""
         return pl.concat((self.get_entry(**entry) for entry in self.cfg.entries))
 
-    def get_subject_splits(self, df_all: pl.LazyFrame) -> pl.LazyFrame:
+    def get_subject_splits(self, df_all: pl.LazyFrame) -> pl.DataFrame:
         """get the subject splits as configured"""
         sbj = (
             df_all.group_by("subject_id")
@@ -197,3 +200,9 @@ class Collator:
         self.get_subject_splits(df_all).write_parquet(
             to_folder / "subject_splits.parquet"
         )
+
+
+if __name__ == "__main__":
+    cltr = Collator()
+    cltr.save_all()
+    # breakpoint()
