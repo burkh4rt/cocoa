@@ -64,17 +64,17 @@ The tokenizer produces two main outputs:
   - `tokens` — the integer token sequence for the subject's timeline.
   - `times` — a parallel list of timestamps, one per token, indicating when each
     event occurred.
-- **`tkzr.pkl.gz`** — a gzipped pickle of the frozen `Tokenizer` object,
-  including its vocabulary and bin definitions, for use at inference time.
+- **`tokenizer.yaml`** — a plain yaml file that contains information about the
+  configuration, learned vocabulary, and bins
 
 For example, a subject with two events might look like:
 
-| subject_id | tokens             | times                                                          |
-| ---------- | ------------------ | -------------------------------------------------------------- |
-| `"100"`    | `[1, 5, 8, 12, 2]` | `[2025-01-01, 2025-01-01, 2025-01-02, 2025-01-03, 2025-01-03]` |
+| subject_id | tokens           | times                                                        |
+| ---------- | ---------------- | ------------------------------------------------------------ |
+| "100"      | [1, 5, 8, 12, 2] | [2025-01-01, 2025-01-01, 2025-01-02, 2025-01-03, 2025-01-03] |
 
-Here `1` is the BOS token, `2` is EOS, and the tokens in between correspond to
-the subject's clinical events in chronological order (with ties broken by the
+Here 1 is the BOS token, 2 is EOS, and the tokens in between correspond to the
+subject's clinical events in chronological order (with ties broken by the
 configured `ordering`). In fused mode each event is a single token; in unfused
 mode an event with a numeric value becomes two tokens (code + quantile bin).
 

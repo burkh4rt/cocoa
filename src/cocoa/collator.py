@@ -22,6 +22,21 @@ class Collator:
         self.data_home = pathlib.Path(self.cfg.data_home).expanduser().resolve()
         self.reference_frame = None
 
+    @staticmethod
+    def slightly_safer_eval(expr):
+        return eval(
+            expr,
+            {
+                "__builtins__": {
+                    "str": str,
+                    "int": int,
+                    "float": float,
+                    "bool": bool,
+                }
+            },
+            {"pl": pl},
+        )
+
     def load_table(
         self,
         *,
@@ -52,21 +67,21 @@ class Collator:
             df = df.with_columns(pl.col(subject_id_str).alias(self.cfg["subject_id"]))
         if filter_expr is not None:
             df = df.filter(
-                eval(filter_expr)
+                self.slightly_safer_eval(filter_expr)
                 if isinstance(filter_expr, str)
-                else [eval(c) for c in filter_expr]
+                else [self.slightly_safer_eval(c) for c in filter_expr]
             )
         if with_col_expr is not None:
             df = df.with_columns(
-                eval(with_col_expr)
+                self.slightly_safer_eval(with_col_expr)
                 if isinstance(with_col_expr, str)
-                else [eval(c) for c in with_col_expr]
+                else [self.slightly_safer_eval(c) for c in with_col_expr]
             )
         if agg_expr is not None:
             df = df.group_by(key if key is not None else self.cfg["subject_id"]).agg(
-                eval(agg_expr)
+                self.slightly_safer_eval(agg_expr)
                 if isinstance(agg_expr, str)
-                else [eval(c) for c in agg_expr]
+                else [self.slightly_safer_eval(c) for c in agg_expr]
             )
         return df
 
