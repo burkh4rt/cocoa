@@ -5,9 +5,12 @@ collects and collates different dataframes into a denormalized format
 """
 
 import pathlib
+import time
 
 import polars as pl
 from omegaconf import OmegaConf
+
+from cocoa.reporter import Logger
 
 
 class Collator:
@@ -26,14 +29,7 @@ class Collator:
     def slightly_safer_eval(expr):
         return eval(
             expr,
-            {
-                "__builtins__": {
-                    "str": str,
-                    "int": int,
-                    "float": float,
-                    "bool": bool,
-                }
-            },
+            {"__builtins__": {"str": str, "int": int, "float": float, "bool": bool}},
             {"pl": pl},
         )
 
@@ -204,7 +200,7 @@ class Collator:
             .otherwise(pl.lit("held_out"))
         ).select("subject_id", "split")
 
-    def save_all(self, path: pathlib.Path = None):
+    def save_all(self, path: pathlib.Path = None, verbose: bool = False):
         to_folder = (
             pathlib.Path(path if path is not None else self.cfg.processed_data_home)
             .expanduser()
@@ -212,12 +208,19 @@ class Collator:
         )
         to_folder.mkdir(parents=True, exist_ok=True)
         (df_all := self.get_all()).sink_parquet(to_folder / "meds.parquet")
-        self.get_subject_splits(df_all).write_parquet(
+        (df_splits := self.get_subject_splits(df_all)).write_parquet(
             to_folder / "subject_splits.parquet"
         )
 
+        if verbose:
+            logger = Logger()
+            logger.summarize_meds_like(df_all, df_splits)
+
 
 if __name__ == "__main__":
+    t0 = time.perf_counter()
     cltr = Collator()
-    cltr.save_all()
+    cltr.save_all(verbose=True)
+    t1 = time.perf_counter()
+    Logger().info("Collation completed in {}s.".format(round(t1 - t0)))
     # breakpoint()

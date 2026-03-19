@@ -5,6 +5,7 @@ CLI for cocoa - configurablecollation and tokenization of clinical data
 """
 
 import pathlib
+import time
 from typing import Annotated, Optional
 
 import typer
@@ -27,6 +28,12 @@ def collate(
         Optional[pathlib.Path],
         typer.Option("--output", "-o", help="Output directory for collated data"),
     ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose", "-v", help="Verbose logging for collate", is_flag=True
+        ),
+    ] = False,
 ):
     """
     Collate raw data into a denormalized format.
@@ -35,9 +42,11 @@ def collate(
     parquet file with collated events.
     """
     with console.status("[bold green]Collating data..."):
+        t0 = time.perf_counter()
         collator = Collator()
-        collator.save_all(path=output)
-    print("[green]✓[/green] Collation complete")
+        collator.save_all(path=output, verbose=verbose)
+        t1 = time.perf_counter()
+        print(f"\n[green]✓[/green] Collation completed in {t1 - t0:.2f}s.")
     out_path = output or collator.cfg.processed_data_home
     print(f"  Output: [cyan]{out_path}/meds.parquet[/cyan]")
 
@@ -48,6 +57,12 @@ def tokenize(
         Optional[pathlib.Path],
         typer.Option("--output", "-o", help="Output directory for tokenized data"),
     ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose", "-v", help="Verbose logging for tokenize", is_flag=True
+        ),
+    ] = False,
 ):
     """
     Tokenize collated data into integer sequences.
@@ -56,9 +71,11 @@ def tokenize(
     vocabulary and bin information.
     """
     with console.status("[bold green]Tokenizing data..."):
+        t0 = time.perf_counter()
         tokenizer = Tokenizer()
-        tokenizer.save_all(path=output)
-    print("[green]✓[/green] Tokenization complete")
+        tokenizer.save_all(path=output, verbose=verbose)
+        t1 = time.perf_counter()
+        print(f"\n[green]✓[/green] Tokenization completed in {t1 - t0:.2f}s.")
     out_path = output or tokenizer.cfg.processed_data_home
     print(f"  Output: [cyan]{out_path}/tokens_times.parquet[/cyan]")
     print(f"  Vocabulary size: [cyan]{len(tokenizer)}[/cyan] tokens")
@@ -70,14 +87,22 @@ def pipeline(
         Optional[pathlib.Path],
         typer.Option("--output", "-o", help="Output directory for all outputs"),
     ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose", "-v", help="Verbose logging for pipeline steps", is_flag=True
+        ),
+    ] = False,
 ):
     """
     Run the full pipeline: collate and tokenize.
     """
     print("[bold]Running full pipeline[/bold]\n")
-    collate(output=output)
-    tokenize(output=output)
-    print("\n[bold green]Pipeline complete![/bold green]")
+    t0 = time.perf_counter()
+    collate(output=output, verbose=verbose)
+    tokenize(output=output, verbose=verbose)
+    t1 = time.perf_counter()
+    print(f"\n[bold green]Pipeline completed in {t1 - t0:.2f}s.[/bold green]")
 
 
 @app.command()

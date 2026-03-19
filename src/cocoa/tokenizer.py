@@ -7,11 +7,14 @@ tokenizes collated data into integer sequences, creating bins & a lookup table
 import collections
 import datetime
 import pathlib
+import time
 import typing
 import zoneinfo
 
 import polars as pl
 from omegaconf import OmegaConf
+
+from cocoa.reporter import Logger
 
 Hashable: typing.TypeAlias = collections.abc.Hashable
 
@@ -225,7 +228,7 @@ class Tokenizer:
             .agg("tokens", pl.col("time").alias("times"))
         )
 
-    def get_all(self) -> pl.LazyFrame:
+    def get_all(self, verbose: bool = False) -> pl.LazyFrame:
         df = self.get_data()  # load data
         df = self.add_ends(df)  # add BOS/EOS tokens
         df = self.add_clocks(df)  # add clock tokens if configured
@@ -233,10 +236,15 @@ class Tokenizer:
         df = self.insert_time_spacers(df)  # insert time spacer codes when configured
         df = self.tokenize_data(df)  # create lookup table and run tokenization
         df = self.aggregate_timelines_from_tokens(df)  # collect tokens into timelines
+
+        if verbose:
+            logger = Logger()
+            logger.summarize_tokens_times(df, self.subject_splits)
+
         return df
 
-    def save_all(self, path: pathlib.Path = None):
-        df = self.get_all()
+    def save_all(self, path: pathlib.Path = None, verbose: bool = False):
+        df = self.get_all(verbose)
 
         to_folder = (
             pathlib.Path(path if path is not None else self.cfg.processed_data_home)
@@ -306,6 +314,9 @@ class Tokenizer:
 
 
 if __name__ == "__main__":
+    t0 = time.perf_counter()
     tkzr = Tokenizer()
-    tkzr.save_all()
+    tkzr.save_all(verbose=True)
+    t1 = time.perf_counter()
+    Logger().info("Tokenization completed in {}s.".format(round(t1 - t0)))
     # breakpoint()
