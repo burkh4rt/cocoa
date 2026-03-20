@@ -32,8 +32,13 @@ Collation is driven by a YAML config that specifies:
   optional augmentation joins (e.g. joining a patient demographics table).
 - A list of **entries**, each mapping a source table (or the reference frame
   itself via `table: REFERENCE`) to the output schema. Each entry declares which
-  column provides the `code`, `time`, and optionally `numeric_value`,
-  `text_value`, `prefix`, `filter_expr`, and `with_col_expr`.
+  column provides the `code`, `time`, and optionally `numeric_value`, and
+  `text_value`. Codes can be given a prefix `prefix`. Some preprocessing can be
+  done with optional entries for `filter_expr`, `with_col_expr`, and `agg_expr`.
+  These take the form of polars expressions that are evaluated and applied to the
+  dataframe during loading. _Mild checks are performed when evaluating these
+  expressions, but in general, the yaml config is just as powerful as the python.
+  Check yaml files prior to use._
 - **Subject splits** (`train_frac` / `tuning_frac`) that partition subjects
   chronologically into train, tuning, and held-out sets.
 

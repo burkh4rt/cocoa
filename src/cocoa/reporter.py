@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 log = logging.getLogger("rich")
-pl.Config.set_tbl_rows(-1)
+pl.Config.set_tbl_rows(100)
 pl.Config.set_tbl_width_chars(500)
 
 
@@ -100,7 +100,9 @@ class Logger(logging.Logger):
             )
         )
 
-    def summarize_tokens_times(self, df: pl.LazyFrame, df_splits: pl.DataFrame):
+    def summarize_tokens_times(
+        self, df: pl.LazyFrame, df_splits: pl.DataFrame, lookup: pl.LazyFrame
+    ):
         self.info("total rows: {}".format(df.select(pl.len()).collect().item()))
         self.info(
             "timeline length stats: {}".format(
@@ -117,7 +119,7 @@ class Logger(logging.Logger):
             )
         )
 
-        df_by_split = df.join(df_splits, on="subject_id", validate="m:1")
+        df_by_split = df.join(df_splits.lazy(), on="subject_id", validate="m:1")
 
         self.info(
             "split-level info: {}".format(
@@ -137,6 +139,31 @@ class Logger(logging.Logger):
                     )
                 )
                 .collect()
+            )
+        )
+
+        sbj_id = (
+            df.with_columns(pl.col("tokens").list.len().alias("len"))
+            .sort((pl.col("len") - pl.lit(25)).abs(), descending=False)
+            .collect()
+            .head(1)
+            .select("subject_id")
+            .item()
+        )
+
+        self.info(
+            "example timeline ({}): {}".format(
+                sbj_id,
+                df.filter(pl.col("subject_id") == sbj_id)
+                .explode("tokens", "times")
+                .join(
+                    lookup,
+                    left_on="tokens",
+                    right_on="token",
+                    how="left",
+                    validate="m:1",
+                )
+                .collect(),
             )
         )
 

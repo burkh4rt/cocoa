@@ -4,19 +4,15 @@
 tokenizes collated data into integer sequences, creating bins & a lookup table
 """
 
-import collections
 import datetime
 import pathlib
 import time
-import typing
 import zoneinfo
 
 import polars as pl
 from omegaconf import OmegaConf
 
 from cocoa.reporter import Logger
-
-Hashable: typing.TypeAlias = collections.abc.Hashable
 
 
 class Tokenizer:
@@ -70,7 +66,6 @@ class Tokenizer:
     def add_clocks(self, df: pl.LazyFrame) -> pl.LazyFrame:
         # add clock codes if configured
         if self.cfg.insert_clocks:
-            clck = list(self.cfg.clocks)
             return pl.concat(
                 [
                     df,
@@ -85,12 +80,15 @@ class Tokenizer:
                             pl.col("end"),
                             interval="1h",
                             closed="right",
-                        ).alias("time")
+                        )
+                        .alias("time")
+                        .list.filter(
+                            pl.element().dt.strftime("%H").is_in(list(self.cfg.clocks))
+                        )
                     )
                     .explode("time", keep_nulls=False)
                     .filter(pl.col("time").is_not_null())
                     .with_columns(HH=pl.col("time").dt.strftime("%H"))
-                    .filter(pl.col("HH").is_in(clck))
                     .select(
                         "subject_id",
                         "time",
@@ -120,7 +118,7 @@ class Tokenizer:
                         for i in range(1, self.cfg.n_bins)
                     ]
                 )
-            )
+            ).cache()
         return self.bins
 
     def bin_data(self, df: pl.LazyFrame) -> pl.LazyFrame:
@@ -189,43 +187,41 @@ class Tokenizer:
             .alias("to_tokenize")
         )
 
-    def get_lookup(self, df: pl.LazyFrame) -> dict:
+    def get_lookup(self, pt: pl.LazyFrame) -> pl.LazyFrame:
         if self.lookup is None and self.is_training:
-            self.lookup = {"UNK": 0} | dict(
-                self.get_pretokenized(df)
-                .join(  # restrict to training data
+            self.lookup = (
+                pt.join(  # restrict to training data
                     self.subject_splits.filter(pl.col("split") == "train"),
                     on="subject_id",
                     validate="m:1",
                 )
                 .explode("to_tokenize")
                 .select(pl.col("to_tokenize").unique().sort())
-                .with_row_index("token", offset=1)  # UNK is zero
+                .filter(pl.col("to_tokenize") != "UNK")  # UNK is 0
+                .with_row_index("token", offset=1)
                 .select("to_tokenize", "token")
-                .collect()
-                .iter_rows()
-            )
+            ).cache()
         return self.lookup
 
-    def tokenize_data(self, df: pl.LazyFrame) -> pl.LazyFrame:
-        return self.get_pretokenized(df).with_columns(
-            tokens=pl.col("to_tokenize").list.eval(
-                pl.element().replace_strict(old=self.get_lookup(df), default=0)
-            )
+    def get_priority(self) -> pl.LazyFrame:
+        return (
+            pl.Series("code_type", self.cfg.ordering)
+            .to_frame()
+            .with_row_index("priority")
+            .lazy()
         )
 
-    def aggregate_timelines_from_tokens(self, df: pl.LazyFrame) -> pl.LazyFrame:
+    def tokenize_data(self, pt: pl.LazyFrame) -> pl.LazyFrame:
         return (
-            df.sort(
-                "time",
-                pl.col("code")
-                .str.split("//")
-                .list[0]
-                .replace(dict(enumerate(self.cfg.ordering))),
-            )
-            .explode("tokens")
+            pt.with_columns(code_type=pl.col("code").str.split("//").list[0])
+            .join(self.get_priority(), on="code_type", how="left", validate="m:1")
+            .with_columns(pl.col("priority").fill_null(len(self.cfg.ordering)))
+            .sort("time", "priority")
+            .explode("to_tokenize")
+            .join(self.get_lookup(pt), on="to_tokenize", validate="m:1", how="left")
+            .with_columns(pl.col("token").fill_null(0))  # UNK
             .group_by("subject_id", maintain_order=True)
-            .agg("tokens", pl.col("time").alias("times"))
+            .agg(pl.col("token").alias("tokens"), pl.col("time").alias("times"))
         )
 
     def get_all(self, verbose: bool = False) -> pl.LazyFrame:
@@ -234,12 +230,12 @@ class Tokenizer:
         df = self.add_clocks(df)  # add clock tokens if configured
         df = self.bin_data(df)  # create bins from training data and bin numeric values
         df = self.insert_time_spacers(df)  # insert time spacer codes when configured
-        df = self.tokenize_data(df)  # create lookup table and run tokenization
-        df = self.aggregate_timelines_from_tokens(df)  # collect tokens into timelines
+        df = self.get_pretokenized(df).cache()  # pretokenize
+        df = self.tokenize_data(df)  # collect tokens into timelines
 
         if verbose:
             logger = Logger()
-            logger.summarize_tokens_times(df, self.subject_splits)
+            logger.summarize_tokens_times(df, self.subject_splits, self.lookup)
 
         return df
 
@@ -255,8 +251,12 @@ class Tokenizer:
         df.sink_parquet(to_folder / "tokens_times.parquet")
         self.save(to_folder / "tokenizer.yaml")
 
-    def __contains__(self, word: Hashable) -> bool:
-        return word in lk.keys() if (lk := self.lookup) is not None else False
+    def __contains__(self, word: str) -> bool:
+        return (
+            word in lk.select("to_tokenize").collect().to_series().to_list()
+            if (lk := self.lookup) is not None
+            else False
+        )
 
     def __str__(self):
         return "{sp} of {sz} words {md}".format(
@@ -269,14 +269,17 @@ class Tokenizer:
         return str(self) + ", created {dttm}".format(dttm=self.created_dttm)
 
     def __len__(self) -> int:
-        return len(lk.keys()) if (lk := self.lookup) is not None else 0
+        return len(lk.collect()) if (lk := self.lookup) is not None else 0
 
     def to_yaml(self) -> str:
-        bins = self.bins.collect().to_dicts() if self.bins is not None else None
         return OmegaConf.to_yaml(
             {
-                "lookup": self.lookup,
-                "bins": bins,
+                "lookup": self.lookup.collect().to_dicts()
+                if self.lookup is not None
+                else None,
+                "bins": self.bins.collect().to_dicts()
+                if self.bins is not None
+                else None,
                 "is_training": self.is_training,
                 "cfg": OmegaConf.to_container(self.cfg),
                 "created_dttm": self.created_dttm,
@@ -288,14 +291,11 @@ class Tokenizer:
         data = OmegaConf.create(yaml_str)
         cfg = OmegaConf.to_container(data.cfg)
         tkzr = cls(is_training=data.is_training, **cfg)
-        tkzr.lookup = (
-            dict(OmegaConf.to_container(data.lookup))
-            if data.lookup is not None
-            else None
-        )
         tkzr.created_dttm = data.created_dttm
         if data.bins is not None:
             tkzr.bins = pl.DataFrame(OmegaConf.to_container(data.bins)).lazy()
+        if data.lookup is not None:
+            tkzr.lookup = pl.DataFrame(OmegaConf.to_container(data.lookup)).lazy()
         if done_training:
             tkzr.is_training = False
         return tkzr
@@ -318,5 +318,5 @@ if __name__ == "__main__":
     tkzr = Tokenizer()
     tkzr.save_all(verbose=True)
     t1 = time.perf_counter()
-    Logger().info("Tokenization completed in {}s.".format(round(t1 - t0)))
+    Logger().info("Tokenization completed in {:.2f}s.".format(t1 - t0))
     # breakpoint()

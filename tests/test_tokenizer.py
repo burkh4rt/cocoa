@@ -153,9 +153,9 @@ def test_fused_tokenization_one_token_per_event(tokenizer):
     df = tokenizer.bin_data(df)
     df = df.join(tokenizer.subject_splits, on="subject_id", validate="m:1")
     df = tokenizer.insert_time_spacers(df)
-    result = tokenizer.tokenize_data(df.filter(pl.col("split") == "train")).collect()
-    # each row should have a list of exactly 1 token
-    assert all(len(t) == 1 for t in result["tokens"].to_list())
+    pre = tokenizer.get_pretokenized(df.filter(pl.col("split") == "train")).collect()
+    # each original event should produce a single pre-tokenized string
+    assert all(len(t) == 1 for t in pre["to_tokenize"].to_list())
 
 
 def test_unfused_tokenization_multiple_tokens(unfused_tokenizer):
@@ -166,13 +166,13 @@ def test_unfused_tokenization_multiple_tokens(unfused_tokenizer):
     df = tkzr.bin_data(df)
     df = df.join(tkzr.subject_splits, on="subject_id", validate="m:1")
     df = tkzr.insert_time_spacers(df)
-    result = tkzr.tokenize_data(df.filter(pl.col("split") == "train")).collect()
-    lab_rows = result.filter(pl.col("code").str.starts_with("LAB"))
-    sex_rows = result.filter(pl.col("code").str.starts_with("SEX"))
+    pre = tkzr.get_pretokenized(df.filter(pl.col("split") == "train")).collect()
+    lab_rows = pre.filter(pl.col("code").str.starts_with("LAB"))
+    sex_rows = pre.filter(pl.col("code").str.starts_with("SEX"))
     # labs: code token + binned_value token = 2
-    assert all(len(t) == 2 for t in lab_rows["tokens"].to_list())
+    assert all(len(t) == 2 for t in lab_rows["to_tokenize"].to_list())
     # sex: just code token = 1
-    assert all(len(t) == 1 for t in sex_rows["tokens"].to_list())
+    assert all(len(t) == 1 for t in sex_rows["to_tokenize"].to_list())
 
 
 def test_get_all_produces_one_row_per_subject(tokenizer):
@@ -185,7 +185,8 @@ def test_get_all_produces_one_row_per_subject(tokenizer):
 def test_get_all_timelines_start_with_bos(tokenizer):
     """Every timeline should begin with BOS token (token 1)."""
     result = tokenizer.get_all().collect()
-    bos_token = tokenizer.lookup["BOS"]
+    lookup_df = tokenizer.lookup.collect()
+    bos_token = lookup_df.filter(pl.col("to_tokenize") == "BOS")["token"].to_list()[0]
     for tokens in result["tokens"].to_list():
         assert tokens[0] == bos_token
 
@@ -193,7 +194,8 @@ def test_get_all_timelines_start_with_bos(tokenizer):
 def test_get_all_timelines_contain_eos(tokenizer):
     """Every timeline should contain an EOS token."""
     result = tokenizer.get_all().collect()
-    eos_token = tokenizer.lookup["EOS"]
+    lookup_df = tokenizer.lookup.collect()
+    eos_token = lookup_df.filter(pl.col("to_tokenize") == "EOS")["token"].to_list()[0]
     for tokens in result["tokens"].to_list():
         assert eos_token in tokens
 
@@ -201,15 +203,17 @@ def test_get_all_timelines_contain_eos(tokenizer):
 def test_vocab_frozen_after_get_all(tokenizer):
     """After get_all, the tokenizer and its vocab should be frozen."""
     tokenizer.get_all().collect()
-    assert isinstance(tokenizer.lookup, dict)
+    assert isinstance(tokenizer.lookup, pl.LazyFrame)
 
 
 def test_contains(tokenizer):
     """__contains__ reflects vocab membership after processing."""
     tokenizer.get_all().collect()
-    assert "BOS" in tokenizer
-    assert "EOS" in tokenizer
-    assert "never_a_real_code" not in tokenizer
+    lookup_df = tokenizer.lookup.collect()
+    toks = lookup_df["to_tokenize"].to_list()
+    assert "BOS" in toks
+    assert "EOS" in toks
+    assert "never_a_real_code" not in toks
 
 
 def test_yaml_round_trip(tokenizer):
@@ -217,7 +221,7 @@ def test_yaml_round_trip(tokenizer):
     tokenizer.get_all().collect()
     yaml_str = tokenizer.to_yaml()
     restored = Tokenizer.from_yaml(yaml_str, done_training=True)
-    assert len(restored) == len(tokenizer)
+    assert len(restored.lookup.collect()) == len(tokenizer.lookup.collect())
     assert not restored.is_training
     assert restored.bins is not None
     # bins have the same codes
@@ -238,7 +242,7 @@ def test_save_all_writes_files(tokenizer):
         assert len(df) == 4
         # can load tokenizer yaml
         restored = tokenizer.load(out / "tokenizer.yaml")
-        assert len(restored) == len(tokenizer)
+        assert len(restored.lookup.collect()) == len(tokenizer.lookup.collect())
 
 
 def test_save_and_load_yaml(tokenizer):
@@ -315,5 +319,5 @@ def test_save_and_load_yaml(tokenizer):
         tokenizer.save(path)
         assert path.exists()
         restored = tokenizer.load(path)
-        assert len(restored) == len(tokenizer)
+        assert len(restored.lookup.collect()) == len(tokenizer.lookup.collect())
         assert not restored.is_training

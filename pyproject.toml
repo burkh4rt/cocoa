@@ -8,7 +8,7 @@
     dependencies = [
         "numpy>=2.4.2",
         "omegaconf>=2.3.0",
-        "polars>=1.38.1",
+        "polars>=1.39.0",
         "rich>=14.3.3",
         "typer>=0.24.1",
     ]
@@ -49,5 +49,5 @@
     requires      = [ "setuptools>=82.0", "wheel", "ninja" ]
 
 [tool.uv]
-    exclude-newer = "2026-03-03T00:00:00Z"
+    exclude-newer = "2026-04-04T00:00:00Z"
     no-cache      = true
