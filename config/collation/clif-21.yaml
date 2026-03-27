@@ -6,6 +6,7 @@ group_id: patient_id # multiple subjects can belong to a group
 subject_splits:
   train_frac: !!float 0.7
   tuning_frac: !!float 0.1
+  # remainder is held_out
 
 # primary reference table for static data to which other tables will be joined
 reference:
@@ -18,7 +19,7 @@ reference:
     - table: clif_patient
       key: patient_id
       validation: "m:1"
-      with_col_expr: pl.lit("AGE").alias("AGE")
+      with_col_expr: pl.lit("age").alias("AGE")
 
 entries:
   - table: REFERENCE
@@ -37,6 +38,7 @@ entries:
     time: admission_dttm
 
   - table: REFERENCE
+    prefix: AGE
     code: AGE
     numeric_value: age_at_admission
     time: admission_dttm
