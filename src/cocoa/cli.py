@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-CLI for cocoa - configurablecollation and tokenization of clinical data
+CLI for cocoa - configurable collation and tokenization
 """
 
 import pathlib
@@ -122,19 +122,6 @@ def info():
     table.add_row("Tokenization Config", str(main_cfg.tokenization_config))
 
     console.print(table)
-
-
-@app.command()
-def test():
-    """
-    Run the test suite.
-    """
-    import subprocess
-    import sys
-
-    # Always run pytest with verbose output by default
-    args = [sys.executable, "-m", "pytest", "tests/", "-vv", "-r", "a", "-s"]
-    raise SystemExit(subprocess.call(args))
 
 
 def main():

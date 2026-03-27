@@ -12,6 +12,10 @@
         "rich>=14.3.3",
         "typer>=0.24.1",
     ]
+    description = "configurable collator and tokenizer"
+    keywords = [ "data collation", "generative event models", "tokenization" ]
+    license = "MIT"
+    license-files = [ "LICEN[CS]E.*" ]
     name = "cocoa"
     readme = { file = "README.md", content-type = "text/markdown" }
     requires-python = ">=3.12"
@@ -20,8 +24,11 @@
     [project.scripts]
         cocoa = "cocoa.cli:main"
 
+    [project.urls]
+        Repository = "https://github.com/bbj-lab/cocoa"
+
 [dependency-groups]
-    dev = [ "pip>=26.0.1", "pytest>=9.0.2", "ruff>=0.15.4" ]
+    dev = [ "pip>=26.0.1", "ruff>=0.15.4" ]
 
 
 [tool.ruff]

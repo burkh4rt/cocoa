@@ -189,7 +189,7 @@ class Tokenizer:
 
     def get_lookup(self, pt: pl.LazyFrame) -> pl.LazyFrame:
         if self.lookup is None and self.is_training:
-            self.lookup = (
+            lookup = (
                 pt.join(  # restrict to training data
                     self.subject_splits.filter(pl.col("split") == "train"),
                     on="subject_id",
@@ -200,7 +200,11 @@ class Tokenizer:
                 .filter(pl.col("to_tokenize") != "UNK")  # UNK is 0
                 .with_row_index("token", offset=1)
                 .select("to_tokenize", "token")
-            ).cache()
+            )
+            unk_row = pl.LazyFrame(
+                {"to_tokenize": ["UNK"], "token": pl.Series([0], dtype=pl.UInt32)}
+            )
+            self.lookup = pl.concat([unk_row, lookup]).cache()
         return self.lookup
 
     def get_priority(self) -> pl.LazyFrame:
@@ -248,7 +252,7 @@ class Tokenizer:
             .resolve()
         )
         to_folder.mkdir(parents=True, exist_ok=True)
-        df.sink_parquet(to_folder / "tokens_times.parquet")
+        df.sink_parquet(to_folder / "tokens_times.parquet", engine="streaming")
         self.save(to_folder / "tokenizer.yaml")
 
     def __contains__(self, word: str) -> bool:

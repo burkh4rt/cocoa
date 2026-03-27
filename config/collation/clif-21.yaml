@@ -6,6 +6,7 @@ group_id: patient_id # multiple subjects can belong to a group
 subject_splits:
   train_frac: !!float 0.7
   tuning_frac: !!float 0.1
+  # remainder is held_out
 
 # primary reference table for static data to which other tables will be joined
 reference:

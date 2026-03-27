@@ -1,8 +1,6 @@
 # Cocoa: a configurable collator
 
-> This repo provides a configurable way to collate data from multiple sources
-> into a single denormalized dataframe and create tokenized timelines from the
-> results.
+> Chicago's second favorite bean
 
 <img src="img/cocoa-bean.png" alt="cocoa bean" width="400" style="display: block;
 margin: 0 auto; -webkit-mask-image: radial-gradient(
@@ -15,6 +13,11 @@ margin: 0 auto; -webkit-mask-image: radial-gradient(
     rgba(0,0,0,1) 50%,
     rgba(0,0,0,0) 100%
   );"/>
+
+## About
+
+This repo provides a configurable way to collate data from multiple sources into
+a single denormalized dataframe and create tokenized timelines from the results.
 
 ## Installation
 
@@ -288,11 +291,22 @@ Send to randi:
 ```
 rsync -avht \
  --delete \
- --exclude "slurm/output/" \
+ --exclude "processed/" \
  --exclude ".venv/" \
  --exclude ".idea/" \
  ~/Documents/chicago/cocoa \
  randi:/gpfs/data/bbj-lab/users/burkh4rt
+```
+
+Send to bbj-lab1:
+```
+rsync -avht \
+ --delete \
+ --exclude "processed/" \
+ --exclude ".venv/" \
+ --exclude ".idea/" \
+ ~/Documents/chicago/cocoa \
+ bbj-lab1:~
 ```
 
 -->
