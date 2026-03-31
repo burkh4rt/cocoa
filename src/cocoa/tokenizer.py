@@ -6,7 +6,6 @@ tokenizes collated data into integer sequences, creating bins & a lookup table
 
 import datetime
 import pathlib
-import time
 import zoneinfo
 
 import polars as pl

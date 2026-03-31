@@ -5,7 +5,6 @@ collects and collates different dataframes into a denormalized format
 """
 
 import pathlib
-import time
 
 import polars as pl
 from omegaconf import OmegaConf
@@ -220,9 +219,6 @@ class Collator:
 
 
 if __name__ == "__main__":
-    t0 = time.perf_counter()
     cltr = Collator()
     cltr.save_all(verbose=True)
-    t1 = time.perf_counter()
-    Logger().info("Collation completed in {}s.".format(round(t1 - t0)))
     # breakpoint()

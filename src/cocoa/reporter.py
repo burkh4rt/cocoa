@@ -26,7 +26,7 @@ class Logger(logging.Logger):
         self.handlers.clear()
 
         formatter = logging.Formatter(
-            fmt="[%(asctime)s] %(message)s", datefmt="%H:%M:%S%Z"
+            fmt="☕️ [%(asctime)s] %(message)s", datefmt="%H:%M:%S%Z"
         )
         ch = RichHandler(
             show_path=False, show_time=False, console=Console(width=200, soft_wrap=True)

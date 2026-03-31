@@ -1,6 +1,6 @@
 # Cocoa: a configurable collator
 
-> Chicago's second favorite bean
+> ☕️ Chicago's second favorite bean
 
 <img src="img/cocoa-bean.png" alt="cocoa bean" width="400" style="display: block;
 margin: 0 auto; -webkit-mask-image: radial-gradient(
@@ -306,7 +306,32 @@ bins:
 The lists following each key correspond to the cutpoints for the associated
 category.
 
+### A partition of subject_id's into train, tuning, and held_out splits
+
+`subject_splits.parquet` gives a table listing out all subject_id's and their
+corresponding split assignment:
+
+```
+┌────────────┬──────────┐
+│ subject_id ┆ split    │
+│ ---        ┆ ---      │
+│ str        ┆ str      │
+╞════════════╪══════════╡
+│ 21081215   ┆ train    │
+│ 20302177   ┆ train    │
+│ …          ┆ …        │
+│ 28150003   ┆ held_out │
+│ 22151813   ┆ held_out │
+└────────────┴──────────┘
+```
+
 Both of these things are placed in `processed_data_home` as configured.
+
+<!-- prettier-ignore-start -->
+> [!TIP]
+> To train a generative event model on this data, check out our configurable
+> trainer: [🦜 cotorra](https://github.com/bbj-lab/cotorra)
+<!-- prettier-ignore-end -->
 
 ## Usage
 
@@ -340,13 +365,13 @@ We provide a CLI with the following commands:
 
 ```sh
 # collate raw data into a denormalized parquet file
-cocoa collate [-o OUTPUT_DIR]
+cocoa collate [--output OUTPUT_DIR] [--verbose]
 
 # tokenize collated data into integer sequences
-cocoa tokenize [-o OUTPUT_DIR]
+cocoa tokenize [--output OUTPUT_DIR] [--verbose]
 
 # run both steps in sequence
-cocoa pipeline [-o OUTPUT_DIR]
+cocoa pipeline [--output OUTPUT_DIR] [--verbose]
 
 # display current configuration
 cocoa info
@@ -354,6 +379,10 @@ cocoa info
 
 <!--
 
+Run in tmux:
+```
+tmux new -s co || tmux a -t co
+```
 
 Send to randi:
 ```
