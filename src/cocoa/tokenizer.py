@@ -228,7 +228,15 @@ class Tokenizer:
             )
             .with_columns(pl.col("token").fill_null(0))  # UNK is 0
             .group_by("subject_id", maintain_order=True)
-            .agg(pl.col("token").alias("tokens"), pl.col("time").alias("times"))
+            .agg(
+                pl.col("token").alias("tokens"),
+                pl.col("time").alias("times"),
+                *(
+                    [pl.col("numeric_value").alias("numeric_values")]
+                    if self.cfg.include_numeric_values
+                    else []
+                ),
+            )
         )
 
     def get_all(self, verbose: bool = False) -> pl.LazyFrame:
