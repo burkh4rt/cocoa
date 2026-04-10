@@ -15,6 +15,7 @@ from rich.table import Table
 
 from cocoa.collator import Collator
 from cocoa.tokenizer import Tokenizer
+from cocoa.winnower import Winnower
 
 app = typer.Typer(name="cocoa", help="Configurable collation and tokenization")
 console = Console()
@@ -85,6 +86,38 @@ def tokenize(
     out_path = output or tokenizer.cfg.processed_data_home
     print(f"  Output: [cyan]{out_path}/tokens_times.parquet[/cyan]")
     print(f"  Vocabulary size: [cyan]{len(tokenizer)}[/cyan] tokens")
+
+
+@app.command()
+def winnow(
+    output: Annotated[
+        Optional[pathlib.Path],
+        typer.Option("--output", "-o", help="Output directory for winnowed data"),
+    ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose",
+            "-v",
+            help="Verbose logging for winnow; prints summary statistics",
+            is_flag=True,
+        ),
+    ] = False,
+):
+    """
+    Winnow held-out data for evaluation.
+
+    Filters held-out timelines and assigns flags to disqualify certain subjects
+    from evaluation based on the configured criteria.
+    """
+    with console.status("[bold green]Winnowing data..."):
+        t0 = time.perf_counter()
+        winnower = Winnower()
+        winnower.save_all(path=output, verbose=verbose)
+        t1 = time.perf_counter()
+        print(f"\n[green]✓[/green] Winnowing completed in {t1 - t0:.2f}s.")
+    out_path = output or winnower.cfg.processed_data_home
+    print(f"  Output: [cyan]{out_path}/held_out_for_inference.parquet[/cyan]")
 
 
 @app.command()

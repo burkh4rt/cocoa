@@ -276,7 +276,7 @@ lookup:
   ADMN//ed: 2
   ADMN//elective: 3
   AGE//age_Q0: 4
-  ...
+  …
 ```
 
 and an entry for bin cutpoints:
@@ -303,7 +303,7 @@ bins:
     - 267.0
     - 314.0
     - 390.0
-  ...
+  …
 ```
 
 The lists following each key correspond to the cutpoints for the associated
@@ -322,6 +322,9 @@ corresponding split assignment:
 ╞════════════╪══════════╡
 │ 21081215   ┆ train    │
 │ 20302177   ┆ train    │
+│ …          ┆ …        │
+│ 27116134   ┆ tuning   │
+│ 29134959   ┆ tuning   │
 │ …          ┆ …        │
 │ 28150003   ┆ held_out │
 │ 22151813   ┆ held_out │
@@ -361,17 +364,60 @@ All of these things are placed in `processed_data_home` as configured.
 > trainer: [🦜 cotorra](https://github.com/bbj-lab/cotorra)
 <!-- prettier-ignore-end -->
 
+## (3 -- optional) Winnowing
+
+The winnower prepares held-out timelines for evaluation by filtering and flagging
+subjects based on outcome criteria. It:
+
+1. Loads held-out data from the tokenized timelines and associated timestamps.
+2. Splits each subject's timeline at a configurable time horizon or at the first
+   occurrence of a specified token, separating events into "past" (before the
+   horizon) and "future" (after the horizon).
+3. Checks for the presence of outcome tokens in both the past and future periods.
+4. Filters out subjects whose timelines don't exceed the horizon duration,
+   ensuring subjects have sufficient observation time.
+5. Outputs a winnowed dataset suitable for inference and evaluation tasks.
+
+Winnowing is driven by a YAML config (like
+[this](./config/winnowing/clif-21.yaml)) that specifies:
+
+- `outcome_tokens` — list of event codes to track as outcomes (e.g.,
+  `XFR-IN//icu`, `DSCG//expired`). The winnower creates binary flags for each
+  outcome indicating whether that token appears in the past or future period.
+- `threshold` — defines how the threshold is set. Currently, `duration_s` and
+  `first_occurrence` are supported for duration-based (in seconds) and first
+  token occurrence-based thresholding, respectively.
+
+**Example configuration:**
+
+```yaml
+outcome_tokens:
+  - XFR-IN//icu
+  - RESP//imv
+  - DSCG//expired
+  - DSCG//hospice
+threshold:
+  # choose one and only one of the following
+  # duration_s: !!int 86400 # 24h
+  first_occurrence: XFR-IN//icu
+```
+
+The output is saved as `held_out_for_inference.parquet` with columns for each
+outcome token (e.g., `XFR-IN//icu_past`, `XFR-IN//icu_future`) indicating whether
+that outcome occurred in the respective time periods.
+
 ## Usage
 
 All configuration lives under `config/`. The entrypoint is `config/main.yaml`,
 which points to the collation and tokenization configs and sets shared paths:
 
 ```yaml
-data_home: ~/path/to/raw/data
+data_home: ~/path/to/raw/data # or use `ln -s xxx raw_data`
 processed_data_home: ~/path/to/output
 
 collation_config: ./config/collation/clif-21.yaml
 tokenization_config: ./config/tokenization/clif-21.yaml
+winnowing_config: ./config/winnowing/clif-21.yaml # optional, for winnowing
 ```
 
 To use a different dataset or schema, create new YAML files under
@@ -402,6 +448,9 @@ cocoa tokenize [--output OUTPUT_DIR] [--verbose]
 # run both steps in sequence
 cocoa pipeline [--output OUTPUT_DIR] [--verbose]
 
+# prepare held_out data for generative inference
+cocoa winnow [--output OUTPUT_DIR] [--verbose]
+
 # display current configuration
 cocoa info
 ```
@@ -417,6 +466,7 @@ Send to randi:
 ```
 rsync -avht \
  --delete \
+ --exclude "raw_data/" \
  --exclude "processed/" \
  --exclude ".venv/" \
  --exclude ".idea/" \
@@ -428,6 +478,7 @@ Send to bbj-lab1:
 ```
 rsync -avht \
  --delete \
+ --exclude "raw_data/" \
  --exclude "processed/" \
  --exclude ".venv/" \
  --exclude ".idea/" \

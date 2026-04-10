@@ -1,0 +1,11 @@
+%YAML 1.2
+---
+outcome_tokens:
+  - XFR-IN//icu
+  - RESP//imv
+  - DSCG//expired
+  - DSCG//hospice
+threshold:
+  # choose one and only one of the following
+  # duration_s: !!int 86400 # 24h
+  first_occurrence: XFR-IN//icu
