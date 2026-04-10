@@ -69,9 +69,9 @@ class Winnower:
                 .list.eval(pl.element() < horizon_s)
                 .list.sum()
             )
-        elif "first_occurance" in self.cfg.get("threshold", {}):
-            # run first-occurance-based thresholding
-            toi = self.tkzr_cfg.lookup[self.cfg.threshold.first_occurance]
+        elif "first_occurrence" in self.cfg.get("threshold", {}):
+            # run first-occurrence-based thresholding
+            toi = self.tkzr_cfg.lookup[self.cfg.threshold.first_occurrence]
             return df.filter(pl.col("tokens").list.contains(toi)).with_columns(
                 last_valid=pl.col("tokens")
                 .list.eval(pl.element() == toi)

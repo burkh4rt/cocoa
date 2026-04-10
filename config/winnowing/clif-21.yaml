@@ -8,4 +8,4 @@ outcome_tokens:
 threshold:
   # choose one and only one of the following
   # duration_s: !!int 86400 # 24h
-  first_occurance: XFR-IN//icu
+  first_occurrence: XFR-IN//icu
