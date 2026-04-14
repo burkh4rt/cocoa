@@ -412,7 +412,7 @@ All configuration lives under `config/`. The entrypoint is `config/main.yaml`,
 which points to the collation and tokenization configs and sets shared paths:
 
 ```yaml
-raw_data_home: ~/path/to/raw/data # or use `ln -s xxx raw_data_home`
+raw_data_home: ~/path/to/raw/data # or use `ln -s xxx raw_data`
 processed_data_home: ~/path/to/output
 
 collation_config: ./config/collation/clif-21.yaml
@@ -443,7 +443,7 @@ environment is active, you may need to prepend `uv run`:
 cocoa collate [--raw-data-home INPUT_DIR] [--processed-data-home OUTPUT_DIR] [--verbose]
 
 # tokenize collated data into integer sequences
-cocoa tokenize [--processed-data-home WORKING_DIR] [--tokenizer_home PRETRAINED_TOKENIZER] [--verbose]
+cocoa tokenize [--processed-data-home WORKING_DIR] [--tokenizer-home PRETRAINED_TOKENIZER] [--verbose]
 
 # prepare held_out data for generative inference
 cocoa winnow [--processed-data-home WORKING_DIR] [--verbose]
