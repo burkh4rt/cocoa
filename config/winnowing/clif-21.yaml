@@ -9,3 +9,5 @@ threshold:
   # choose one and only one of the following
   duration_s: !!int 86400 # 24h
   # first_occurrence: XFR-IN//icu
+
+horizon_after_threshold_s: !!int 2592000 # 30d outcome window after prediction threshold

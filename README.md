@@ -387,6 +387,8 @@ Winnowing is driven by a YAML config (like
 - `threshold` — defines how the threshold is set. Currently, `duration_s` and
   `first_occurrence` are supported for duration-based (in seconds) and first
   token occurrence-based thresholding, respectively.
+- `horizon_after_threshold_s` is an optional parameter that allows you to set a
+  prediction window (in seconds) after the threshold is triggered
 
 **Example configuration:**
 
@@ -400,6 +402,8 @@ threshold:
   # choose one and only one of the following
   # duration_s: !!int 86400 # 24h
   first_occurrence: XFR-IN//icu
+
+horizon_after_threshold_s: !!int 2592000 # 30d outcome window after prediction threshold
 ```
 
 The output is saved as `held_out_for_inference.parquet` with columns for each
