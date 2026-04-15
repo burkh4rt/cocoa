@@ -258,6 +258,6 @@ class Collator:
 
 if __name__ == "__main__":
     self = Collator()
-    self.save_all(verbose=True)
-    print(self.get_subject_splits())
+    # self.save_all(verbose=True)
+    # print(self.get_subject_splits())
     # breakpoint()

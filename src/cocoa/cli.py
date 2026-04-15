@@ -91,6 +91,14 @@ def tokenize(
             "--main-config", "-m", help="Main configuration file (overrides default)"
         ),
     ] = None,
+    tokenization_config: Annotated[
+        Optional[pathlib.Path],
+        typer.Option(
+            "--tokenization-config",
+            "-c",
+            help="Tokenization configuration file (overrides config)",
+        ),
+    ] = None,
     processed_data_home: Annotated[
         Optional[str],
         typer.Option(
@@ -105,14 +113,6 @@ def tokenize(
             "--tokenizer-home",
             "-t",
             help="Use a pretrained tokenizer at this path (overrides config)",
-        ),
-    ] = None,
-    tokenization_config: Annotated[
-        Optional[pathlib.Path],
-        typer.Option(
-            "--tokenization-config",
-            "-c",
-            help="Tokenization configuration file (overrides config)",
         ),
     ] = None,
     verbose: Annotated[
@@ -149,6 +149,8 @@ def tokenize(
         print(f"\n[green]✓[/green] Tokenization completed in {t1 - t0:.2f}s.")
     out_path = tokenizer.processed_data_home
     print(f"  Output: [cyan]{out_path}/tokens_times.parquet[/cyan]")
+    print(f"  Output: [cyan]{out_path}/subject_splits.parquet[/cyan]")
+    print(f"  Output: [cyan]{out_path}/tokens_vocab.json[/cyan]")
     print(f"  Vocabulary size: [cyan]{len(tokenizer)}[/cyan] tokens")
 
 
@@ -160,20 +162,20 @@ def winnow(
             "--main-config", "-m", help="Main configuration file (overrides default)"
         ),
     ] = None,
-    processed_data_home: Annotated[
-        Optional[pathlib.Path],
-        typer.Option(
-            "--processed-data-home",
-            "-p",
-            help="Processed data directory (overrides config)",
-        ),
-    ] = None,
     winnowing_config: Annotated[
         Optional[pathlib.Path],
         typer.Option(
             "--winnowing-config",
             "-c",
             help="Winnowing configuration file (overrides config)",
+        ),
+    ] = None,
+    processed_data_home: Annotated[
+        Optional[str],
+        typer.Option(
+            "--processed-data-home",
+            "-p",
+            help="Processed data directory (overrides config)",
         ),
     ] = None,
     verbose: Annotated[
@@ -202,7 +204,7 @@ def winnow(
         winnower.save_all(verbose=verbose)
         t1 = time.perf_counter()
         print(f"\n[green]✓[/green] Winnowing completed in {t1 - t0:.2f}s.")
-    out_path = winnower.cfg.processed_data_home
+    out_path = winnower.processed_data_home
     print(f"  Output: [cyan]{out_path}/held_out_for_inference.parquet[/cyan]")
 
 
@@ -234,13 +236,13 @@ def pipeline(
         ),
     ] = None,
     raw_data_home: Annotated[
-        Optional[pathlib.Path],
+        Optional[str],
         typer.Option(
             "--raw-data-home", "-r", help="Raw data directory (overrides config)"
         ),
     ] = None,
     processed_data_home: Annotated[
-        Optional[pathlib.Path],
+        Optional[str],
         typer.Option(
             "--processed-data-home",
             "-p",
