@@ -448,19 +448,19 @@ We provide a CLI:
 
  Configurable collation and tokenization
 
-╭─ Options ───────────────────────────────────────────────────────────────────────────╮
-│ --install-completion          Install completion for the current shell.             │
-│ --show-completion             Show completion for the current shell, to copy it or  │
-│                               customize the installation.                           │
-│ --help                        Show this message and exit.                           │
-╰─────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ──────────────────────────────────────────────────────────────────────────╮
-│ collate   Collate raw data into a denormalized format.                              │
-│ tokenize  Tokenize collated data into integer sequences.                            │
-│ winnow    Winnow held-out data for evaluation.                                      │
-│ pipeline  Run the full pipeline: collate and tokenize.                              │
-│ info      Display configuration information.                                        │
-╰─────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ───────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.     │
+│ --show-completion             Show completion for the current shell, to     │
+│                               copy it or customize the installation.        │
+│ --help                        Show this message and exit.                   │
+╰─────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ──────────────────────────────────────────────────────────────────╮
+│ collate   Collate raw data into a denormalized format.                      │
+│ tokenize  Tokenize collated data into integer sequences.                    │
+│ winnow    Winnow held-out data for evaluation.                              │
+│ pipeline  Run the full pipeline: collate, tokenize, & winnow.               │
+│ info      Display configuration information.                                │
+╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
 with commands:
@@ -475,16 +475,19 @@ with commands:
   Reads configuration from config/main.yaml and produces a MEDS-like
   parquet file with collated events.
 
-  ╭─ Options ───────────────────────────────────────────────────────────────────────────╮
-  │ --main-config          -m      PATH  Main configuration file (overrides default)    │
-  │ --collation-config     -c      PATH  Collation configuration file (overrides        │
-  │                                      config)                                        │
-  │ --raw-data-home        -r      TEXT  Raw data directory (overrides config)          │
-  │ --processed-data-home  -p      TEXT  Processed data directory (overrides config)    │
-  │ --verbose              -v            Verbose logging for collate; this may cause    │
-  │                                      memory issues with large datasets              │
-  │ --help                               Show this message and exit.                    │
-  ╰─────────────────────────────────────────────────────────────────────────────────────╯
+  ╭─ Options ───────────────────────────────────────────────────────────────────╮
+  │ --main-config          -m      PATH  Main configuration file (overrides     │
+  │                                      default)                               │
+  │ --collation-config     -c      PATH  Collation configuration file           │
+  │                                      (overrides config)                     │
+  │ --raw-data-home        -r      TEXT  Raw data directory (overrides config)  │
+  │ --processed-data-home  -p      TEXT  Processed data directory (overrides    │
+  │                                      config)                                │
+  │ --verbose              -v            Verbose logging for collate; this may  │
+  │                                      cause memory issues with large         │
+  │                                      datasets                               │
+  │ --help                               Show this message and exit.            │
+  ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
 - `cocoa tokenize`
@@ -497,17 +500,20 @@ with commands:
   Reads collated parquet files and produces tokenized timelines with
   vocabulary and bin information.
 
-  ╭─ Options ───────────────────────────────────────────────────────────────────────────╮
-  │ --main-config          -m      PATH  Main configuration file (overrides default)    │
-  │ --processed-data-home  -p      TEXT  Processed data directory (overrides config)    │
-  │ --tokenizer-home       -t      TEXT  Use pretrained tokenizer from this directory   │
-  │                                      (overrides config)                             │
-  │ --tokenization-config  -c      PATH  Tokenization configuration file (overrides     │
-  │                                      config)                                        │
-  │ --verbose              -v            Verbose logging for collate; this may cause    │
-  │                                      memory issues with large datasets              │
-  │ --help                               Show this message and exit.                    │
-  ╰─────────────────────────────────────────────────────────────────────────────────────╯
+  ╭─ Options ───────────────────────────────────────────────────────────────────╮
+  │ --main-config          -m      PATH  Main configuration file (overrides     │
+  │                                      default)                               │
+  │ --tokenization-config  -c      PATH  Tokenization configuration file        │
+  │                                      (overrides config)                     │
+  │ --processed-data-home  -p      TEXT  Processed data directory (overrides    │
+  │                                      config)                                │
+  │ --tokenizer-home       -t      TEXT  Use a pretrained tokenizer at this     │
+  │                                      path (overrides config)                │
+  │ --verbose              -v            Verbose logging for collate; this may  │
+  │                                      cause memory issues with large         │
+  │                                      datasets                               │
+  │ --help                               Show this message and exit.            │
+  ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
 - `cocoa winnow`
@@ -520,15 +526,17 @@ with commands:
   Filters held-out timelines and assigns flags to disqualify certain subjects
   from evaluation based on the configured criteria.
 
-  ╭─ Options ───────────────────────────────────────────────────────────────────────────╮
-  │ --main-config          -m      PATH  Main configuration file (overrides default)    │
-  │ --processed-data-home  -p      PATH  Processed data directory (overrides config)    │
-  │ --winnowing-config     -c      PATH  Winnowing configuration file (overrides        │
-  │                                      config)                                        │
-  │ --verbose              -v            Verbose logging for winnow; prints summary     │
-  │                                      statistics                                     │
-  │ --help                               Show this message and exit.                    │
-  ╰─────────────────────────────────────────────────────────────────────────────────────╯
+  ╭─ Options ───────────────────────────────────────────────────────────────────╮
+  │ --main-config          -m      PATH  Main configuration file (overrides     │
+  │                                      default)                               │
+  │ --winnowing-config     -c      PATH  Winnowing configuration file           │
+  │                                      (overrides config)                     │
+  │ --processed-data-home  -p      TEXT  Processed data directory (overrides    │
+  │                                      config)                                │
+  │ --verbose              -v            Verbose logging for winnow; prints     │
+  │                                      summary statistics                     │
+  │ --help                               Show this message and exit.            │
+  ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
 - `cocoa pipeline`
@@ -538,19 +546,21 @@ with commands:
 
   Run the full pipeline: collate, tokenize, & winnow.
 
-  ╭─ Options ───────────────────────────────────────────────────────────────────────────╮
-  │ --main-config          -m      PATH  Main configuration file (overrides default)    │
-  │ --collation-config             PATH  Collation configuration file (overrides        │
-  │                                      config)                                        │
-  │ --tokenization-config          PATH  Tokenization configuration file (overrides     │
-  │                                      config)                                        │
-  │ --winnowing-config             PATH  Winnowing configuration file (overrides        │
-  │                                      config)                                        │
-  │ --raw-data-home        -r      PATH  Raw data directory (overrides config)          │
-  │ --processed-data-home  -p      PATH  Processed data directory (overrides config)    │
-  │ --verbose              -v            Verbose logging for pipeline steps             │
-  │ --help                               Show this message and exit.                    │
-  ╰─────────────────────────────────────────────────────────────────────────────────────╯
+  ╭─ Options ───────────────────────────────────────────────────────────────────╮
+  │ --main-config          -m      PATH  Main configuration file (overrides     │
+  │                                      default)                               │
+  │ --collation-config             PATH  Collation configuration file           │
+  │                                      (overrides config)                     │
+  │ --tokenization-config          PATH  Tokenization configuration file        │
+  │                                      (overrides config)                     │
+  │ --winnowing-config             PATH  Winnowing configuration file           │
+  │                                      (overrides config)                     │
+  │ --raw-data-home        -r      TEXT  Raw data directory (overrides config)  │
+  │ --processed-data-home  -p      TEXT  Processed data directory (overrides    │
+  │                                      config)                                │
+  │ --verbose              -v            Verbose logging for pipeline steps     │
+  │ --help                               Show this message and exit.            │
+  ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
 <!-- prettier-ignore-start -->

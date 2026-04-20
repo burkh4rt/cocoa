@@ -10,7 +10,7 @@ import numpy as np
 import polars as pl
 from omegaconf import OmegaConf
 
-from cocoa.reporter import Logger
+from cocoa.logger import Logger
 
 
 class Collator:

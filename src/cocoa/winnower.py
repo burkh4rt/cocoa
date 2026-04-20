@@ -10,7 +10,7 @@ import pathlib
 import polars as pl
 from omegaconf import OmegaConf
 
-from cocoa.reporter import Logger
+from cocoa.logger import Logger
 
 
 class Winnower:
@@ -155,26 +155,7 @@ class Winnower:
         )
         if verbose:
             logger = Logger()
-            logger.info(
-                (
-                    df.select(
-                        [
-                            pl.col(f"{t}_{s}").mean().alias(f"{t}_{s}")
-                            for t in self.cfg.outcome_tokens
-                            for s in ("past", "future")
-                        ]
-                    )
-                    .collect()
-                    .transpose(
-                        include_header=True, header_name="event", column_names=("rate",)
-                    )
-                    .with_columns(
-                        token=pl.col("event").str.replace(r"_(past|future)$", ""),
-                        tense=pl.col("event").str.extract(r"(past|future)$"),
-                    )
-                    .pivot(values="rate", index="token", on="tense")
-                )
-            )
+            logger.summarize_thresholded(df, self.cfg.outcome_tokens)
 
 
 if __name__ == "__main__":
