@@ -7,7 +7,8 @@ outcome_tokens:
   - DSCG//hospice
 threshold:
   # choose one and only one of the following
-  duration_s: !!int 86400 # 24h
+  # duration_s: !!int 86400 # 24h
   # first_occurrence: XFR-IN//icu
+  uniform_random: !!bool True
 
-horizon_after_threshold_s: !!int 2592000 # 30d outcome window after prediction threshold
+horizon_after_threshold_s: !!int 864000 # 10d outcome window after prediction threshold

@@ -383,9 +383,13 @@ Winnowing is driven by a YAML config (like
 - `outcome_tokens` — list of event codes to track as outcomes (e.g.,
   `XFR-IN//icu`, `DSCG//expired`). The winnower creates binary flags for each
   outcome indicating whether that token appears in the past or future period.
-- `threshold` — defines how the threshold is set. Currently, `duration_s` and
-  `first_occurrence` are supported for duration-based (in seconds) and first
-  token occurrence-based thresholding, respectively.
+- `threshold` — defines how the threshold is set. Currently supported options are
+  as follows:
+  - `duration_s` (integer) thresholds after a given duration (in seconds)
+  - `first_occurrence` (token string) thresholds after the first occurrence of
+    the provided token
+  - `uniform_random` (boolean) thresholds at a point in time chosen uniformly at
+    random from the total duration of the timeline
 - `horizon_after_threshold_s` is an optional parameter that allows you to set a
   prediction window (in seconds) after the threshold is triggered
 

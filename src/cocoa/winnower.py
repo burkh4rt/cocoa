@@ -7,6 +7,7 @@ adding flags to disqualify certain subjects from evaluation
 
 import pathlib
 
+import numpy as np
 import polars as pl
 from omegaconf import OmegaConf
 
@@ -47,6 +48,7 @@ class Winnower:
             pathlib.Path(self.cfg.processed_data_home).expanduser().resolve()
         )
         self.tkzr_cfg = OmegaConf.load(self.processed_data_home / "tokenizer.yaml")
+        self.rng = np.random.default_rng(seed=42)
 
     def load_frame(self) -> pl.LazyFrame:
         """
@@ -92,6 +94,22 @@ class Winnower:
                 .list.arg_max()
                 + pl.lit(1)
                 # place the triggering token into the past; it is known
+            )
+        elif (
+            "uniform_random" in self.cfg.get("threshold", {})
+            and self.cfg.threshold.uniform_random
+        ):
+            # set the threshold uniformly at random over the duration of each stay
+            return df.with_columns(
+                sampled_duration=pl.col("s_total_duration").map_elements(
+                    lambda x: x * self.rng.random()
+                )
+            ).with_columns(
+                last_valid=pl.struct(["s_elapsed", "sampled_duration"]).map_elements(
+                    lambda row: sum(
+                        x < row["sampled_duration"] for x in row["s_elapsed"]
+                    )
+                )
             )
         else:
             raise NotImplementedError("Please check the thresholding configuration.")
