@@ -50,7 +50,7 @@ class Winnower:
         self.tkzr_cfg = OmegaConf.load(self.processed_data_home / "tokenizer.yaml")
         self.rng = np.random.default_rng(seed=42)
 
-    def load_frame(self) -> pl.LazyFrame:
+    def load_frame(self, split="held_out") -> pl.LazyFrame:
         """
         loads held_out timelines, and performs some preliminary calculations;
         these are lazily evaluated, so only completed if used
@@ -62,7 +62,7 @@ class Winnower:
                 on="subject_id",
                 validate="1:1",
             )
-            .filter(pl.col("split") == "held_out")
+            .filter(pl.col("split") == split)
             .drop("split")
             .with_columns(
                 s_elapsed=pl.col("times").list.eval(
@@ -158,25 +158,29 @@ class Winnower:
             }
         )
 
-    def prepare_winnowed_frame(self) -> pl.LazyFrame:
+    def prepare_winnowed_frame(self, split="held_out") -> pl.LazyFrame:
         """loads held-out data, splits at time threshold, and prepares labels"""
         return (
-            self.load_frame().pipe(self.run_thresholding).pipe(self.add_outcome_flags)
+            self.load_frame(split=split)
+            .pipe(self.run_thresholding)
+            .pipe(self.add_outcome_flags)
         )
 
     def save_all(self, verbose: bool = False):
         """grabs winnowed frame, prints summary stats if requested, and saves it"""
-        df = self.prepare_winnowed_frame()
-        df.sink_parquet(
-            self.processed_data_home / "held_out_for_inference.parquet",
-            engine="streaming",
-        )
-        if verbose:
-            logger = Logger()
-            logger.summarize_thresholded(df, self.cfg.outcome_tokens)
+        for split in self.cfg.get("splits", ["held_out"]):
+            df = self.prepare_winnowed_frame(split=split)
+            df.sink_parquet(
+                self.processed_data_home / f"{split}_for_inference.parquet",
+                engine="streaming",
+            )
+            if verbose:
+                logger = Logger()
+                logger.info(f"Prepared split {split} for inference:")
+                logger.summarize_thresholded(df, self.cfg.outcome_tokens)
 
 
 if __name__ == "__main__":
     self = Winnower()
     self.save_all(verbose=True)
-    # breakpoint()
+    breakpoint()
