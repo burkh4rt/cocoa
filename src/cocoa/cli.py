@@ -205,7 +205,8 @@ def winnow(
         t1 = time.perf_counter()
         print(f"\n[green]✓[/green] Winnowing completed in {t1 - t0:.2f}s.")
     out_path = winnower.processed_data_home
-    print(f"  Output: [cyan]{out_path}/held_out_for_inference.parquet[/cyan]")
+    for s in winnower.cfg.get("splits", ["held_out"]):
+        print(f"  Output: [cyan]{out_path}/{s}_for_inference.parquet[/cyan]")
 
 
 @app.command()

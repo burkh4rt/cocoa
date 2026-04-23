@@ -46,11 +46,13 @@ class Tokenizer:
             tokenization_cfg,
             {k: v for k, v in kwargs.items() if v is not None},
         )
-        self._processed_data_home = (
+        self.processed_data_home = (
             pathlib.Path(self.cfg.processed_data_home).expanduser().resolve()
         )
         self.bins = None
-        self.subject_splits = None
+        self.subject_splits = pl.scan_parquet(
+            self.processed_data_home / "subject_splits.parquet"
+        )
         self.lookup = None
         self.is_training = is_training
         self.created_dttm = (
@@ -59,26 +61,12 @@ class Tokenizer:
             .isoformat()
         )
 
-    @property
-    def processed_data_home(self):
-        return self._processed_data_home
-
-    @processed_data_home.setter
-    def processed_data_home(self, value):
-        if value is not None:
-            self._processed_data_home = pathlib.Path(value).expanduser().resolve()
+        self.logger = Logger()
+        self.logger.info("Tokenizer initialized...")
+        self.logger.info(f"{self.processed_data_home=}")
 
     def get_data(self) -> pl.LazyFrame:
-        self.subject_splits = pl.scan_parquet(
-            pathlib.Path(self.cfg.subject_splits).expanduser().resolve()
-        )
-        return pl.concat(
-            [
-                pl.scan_parquet(pathlib.Path(f).expanduser().resolve())
-                for f in self.cfg.collated_inputs
-            ],
-            how="diagonal",
-        )
+        return pl.scan_parquet(self.processed_data_home / "meds.parquet")
 
     @staticmethod
     def add_ends(df: pl.LazyFrame) -> pl.LazyFrame:
@@ -296,8 +284,7 @@ class Tokenizer:
         df = self.tokenize_data(df)  # collect tokens into timelines
 
         if verbose:
-            logger = Logger()
-            logger.summarize_tokens_times(df, self.subject_splits, self.lookup)
+            self.logger.summarize_tokens_times(df, self.subject_splits, self.lookup)
 
         return df
 

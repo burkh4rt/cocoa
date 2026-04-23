@@ -4,11 +4,6 @@ n_bins: !!int 10
 fused: !!bool true
 include_numeric_values: !!bool false
 
-collated_inputs:
-  - ./processed/meds.parquet
-
-subject_splits: ./processed/subject_splits.parquet
-
 ordering:
   - BOS
   - TIME # the timestamp for a time spacing token is at the next event

@@ -50,6 +50,10 @@ class Winnower:
         self.tkzr_cfg = OmegaConf.load(self.processed_data_home / "tokenizer.yaml")
         self.rng = np.random.default_rng(seed=42)
 
+        self.logger = Logger()
+        self.logger.info("Winnower initialized...")
+        self.logger.info(f"{self.processed_data_home=}")
+
     def load_frame(self, split="held_out") -> pl.LazyFrame:
         """
         loads held_out timelines, and performs some preliminary calculations;
@@ -121,6 +125,7 @@ class Winnower:
         """
         df = df.with_columns(
             tokens_past=pl.col("tokens").list.head("last_valid"),
+            s_elapsed_past=pl.col("s_elapsed").list.head("last_valid"),
             tokens_future=pl.col("tokens").list.tail(
                 pl.col("tokens").list.len() - pl.col("last_valid")
             ),
@@ -147,7 +152,12 @@ class Winnower:
                 )
             )
         return df.select(
-            "subject_id", "tokens", "times", "tokens_past", "tokens_future"
+            "subject_id",
+            "tokens",
+            "times",
+            "tokens_past",
+            "s_elapsed_past",
+            "tokens_future",
         ).with_columns(
             **{
                 f"{t}_{tense}": pl.col(f"tokens_{tense}").list.contains(
@@ -175,9 +185,8 @@ class Winnower:
                 engine="streaming",
             )
             if verbose:
-                logger = Logger()
-                logger.info(f"Prepared split {split} for inference:")
-                logger.summarize_thresholded(df, self.cfg.outcome_tokens)
+                self.logger.info(f"Prepared split {split} for inference:")
+                self.logger.summarize_thresholded(df, self.cfg.outcome_tokens)
 
 
 if __name__ == "__main__":

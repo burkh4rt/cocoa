@@ -36,7 +36,7 @@ class Collator:
         )
         self.cfg = OmegaConf.merge(
             main_cfg, collation_cfg, {k: v for k, v in kwargs.items() if v is not None}
-        )
+        )  # cli overrides enter the configuration here
         self.raw_data_home = (
             pathlib.Path(self.cfg.get("raw_data_home", self.cfg.get("data_home")))
             .expanduser()
@@ -48,6 +48,11 @@ class Collator:
         self.processed_data_home.mkdir(parents=True, exist_ok=True)
         self.reference_frame = None
         self.splits: tuple = ("train", "tuning", "held_out")
+
+        self.logger = Logger()
+        self.logger.info("Collator initialized...")
+        self.logger.info(f"{self.raw_data_home=}")
+        self.logger.info(f"{self.processed_data_home=}")
 
     @staticmethod
     def slightly_safer_eval(expr):
@@ -252,8 +257,7 @@ class Collator:
         )
 
         if verbose:
-            logger = Logger()
-            logger.summarize_meds_like(df_all, df_splits)
+            self.logger.summarize_meds_like(df_all, df_splits)
 
 
 if __name__ == "__main__":
