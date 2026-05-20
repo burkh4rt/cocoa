@@ -13,7 +13,7 @@
     name = "cocoa"
     readme = { file = "README.md", content-type = "text/markdown" }
     requires-python = ">=3.11"
-    version = "26.3.1"
+    version = "26.4.0"
 
     [project.scripts]
         cocoa = "cocoa.cli:main"
@@ -21,12 +21,12 @@
     [project.urls]
         Repository = "https://github.com/bbj-lab/cocoa"
 
+    [project.optional-dependencies]
+        dev = [ "pip", "ruff" ]
+
 [build-system]
     build-backend = "setuptools.build_meta"
     requires      = [ "setuptools" ]
-
-[dependency-groups]
-    dev = [ "pip", "ruff" ]
 
 [tool.ruff]
     extend-exclude = [ "*.md" ]
@@ -54,4 +54,4 @@
         where = [ "src" ]
 
     [tool.setuptools.package-data]
-        "cocoa.config" = [ "*.yaml" ]
+        "config" = [ "*.yaml" ]

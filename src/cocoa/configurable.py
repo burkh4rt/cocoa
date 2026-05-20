@@ -25,7 +25,7 @@ class Configurable:
         self.config_file = config_file
         default_file = self.default_file
         self.default = (
-            OmegaConf.load(resources.files("cocoa.config") / default_file)
+            OmegaConf.load(resources.files("config") / default_file)
             if default_file is not None
             else OmegaConf.create()
         )
