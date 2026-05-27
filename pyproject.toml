@@ -1,4 +1,11 @@
 [project]
+    authors = [
+        { name = "Michael C. Burkhart", email = "burkh4rt@uchicago.edu" },
+        { name = "Luke Solo", email = "lsolo@uchicago.edu" },
+        { name = "Inhyeok Lee", email = "ihlee@uchicago.edu" },
+        { name = "S'Khaja Charles", email = "skhaja@uchicago.edu" },
+        { name = "Brett K. Beaulieu-Jones", email = "beaulieujones@uchicago.edu" },
+    ]
     classifiers = [
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Science/Research",
@@ -13,7 +20,7 @@
     name = "cocoa"
     readme = { file = "README.md", content-type = "text/markdown" }
     requires-python = ">=3.11"
-    version = "26.3.1"
+    version = "26.4.0"
 
     [project.scripts]
         cocoa = "cocoa.cli:main"
@@ -21,9 +28,12 @@
     [project.urls]
         Repository = "https://github.com/bbj-lab/cocoa"
 
-[dependency-groups]
-    dev = [ "pip", "ruff" ]
+    [project.optional-dependencies]
+        dev = [ "pip", "ruff" ]
 
+[build-system]
+    build-backend = "setuptools.build_meta"
+    requires      = [ "setuptools" ]
 
 [tool.ruff]
     extend-exclude = [ "*.md" ]
@@ -43,7 +53,3 @@
         [tool.ruff.lint.isort]
             known-first-party       = [ "cocoa", "cotorra", "coreopsis" ]
             split-on-trailing-comma = false
-
-[build-system]
-    build-backend = "setuptools.build_meta"
-    requires      = [ "setuptools" ]

@@ -363,7 +363,7 @@ All of these things are placed in `processed_data_home` as configured.
 > trainer: [🦜 cotorra](https://github.com/bbj-lab/cotorra)
 <!-- prettier-ignore-end -->
 
-## (3 -- optional) Winnowing
+## (3) Winnowing
 
 The winnower prepares held-out timelines for evaluation by filtering and flagging
 subjects based on outcome criteria. It:
@@ -449,7 +449,7 @@ We provide a CLI:
 ```
  Usage: cocoa [OPTIONS] COMMAND [ARGS]...
 
- Configurable collation and tokenization
+ Configurable collation and tokenization (vXX.X.X)
 
 ╭─ Options ───────────────────────────────────────────────────────────────────╮
 │ --install-completion          Install completion for the current shell.     │
