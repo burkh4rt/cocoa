@@ -21,6 +21,8 @@ margin: 0 auto; -webkit-mask-image: radial-gradient(
 
 This repo provides a configurable way to collate data from multiple sources into
 a single denormalized dataframe and create tokenized timelines from the results.
+It benefits from previous experience collating data to train foundation models on
+tokenized electronic health records. [^1] [^2] [^3] [^4]
 
 ## Installation
 
@@ -563,6 +565,29 @@ with commands:
 > [!TIP]
 > For common use cases, check out the [recipes](./recipes/README.md) section!
 <!-- prettier-ignore-end -->
+
+[^1]:
+    M. Burkhart, B. Ramadan, Z. Liao, K. Chhikara, J. Rojas, W. Parker, & B.
+    Beaulieu-Jones, Foundation models for electronic health records:
+    representation dynamics and transferability,
+    [arXiv:2504.10422](https://doi.org/10.48550/arXiv.2504.10422)
+
+[^2]:
+    M. Burkhart, B. Ramadan, L. Solo, W. Parker, & B. Beaulieu-Jones,
+    [Quantifying surprise in clinical care: Detecting highly informative events in electronic health records with foundation models](https://doi.org/10.1142/9789819824755_0013),
+    Pacific Symposium on Biocomputing 31 (2026), 173–188
+
+[^3]:
+    L. Solo, M. McDermott, W. Parker, B. Ramadan, M. Burkhart, & B.
+    Beaulieu-Jones, Efficient generative prediction for EHR foundation models:
+    the SCOPE and REACH estimators,
+    [arXiv:2602.03730](https://doi.org/10.48550/arXiv.2602.03730)
+
+[^4]:
+    I. Lee, L. Solo, M. Burkhart, B. Ramadan, W. Parker, & B. Beaulieu-Jones,
+    Representation before training: a fixed-budget benchmark for generative
+    medical event models,
+    [arXiv:2604.16775](https://doi.org/10.48550/arXiv.2604.16775)
 
 <!--
 
