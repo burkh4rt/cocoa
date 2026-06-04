@@ -15,6 +15,7 @@ from rich.console import Console
 
 from cocoa.collator import Collator
 from cocoa.tokenizer import Tokenizer
+from cocoa.util import combine_processed_data
 from cocoa.winnower import Winnower
 
 __version__ = version("cocoa")
@@ -236,6 +237,32 @@ def pipeline(
     )
     t1 = time.perf_counter()
     print(f"\n[bold green]Pipeline completed in {t1 - t0:.2f}s.[/bold green]")
+
+
+@app.command()
+def combine_datasets(
+    input_data_dirs: list[str],
+    output_data_dir: Annotated[
+        str,
+        typer.Option(
+            "--output-data-dir", "-o", help="Output directory for combined data"
+        ),
+    ] = ...,
+):
+    """
+    Combine multiple processed datasets into one.
+
+    Merges parquet files and validates that tokenizer configurations match
+    across all input directories.
+    """
+    with console.status("[bold green]Combining datasets..."):
+        t0 = time.perf_counter()
+        output = combine_processed_data(
+            processed_data_homes=input_data_dirs, processed_data_home=output_data_dir
+        )
+        t1 = time.perf_counter()
+        print(f"\n[green]✓[/green] Combine completed in {t1 - t0:.2f}s.")
+        print(f"  Output at: [cyan]{output}[/cyan]")
 
 
 def main():

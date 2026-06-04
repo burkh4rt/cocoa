@@ -453,7 +453,7 @@ We provide a CLI that should be sufficient for most use cases:
 ```
  Usage: cocoa [OPTIONS] COMMAND [ARGS]...
 
- Configurable collation and tokenization (vXX.X.X)
+ Configurable collation and tokenization (v26.4.0)
 
 ╭─ Options ───────────────────────────────────────────────────────────────────╮
 │ --install-completion          Install completion for the current shell.     │
@@ -462,10 +462,11 @@ We provide a CLI that should be sufficient for most use cases:
 │ --help                        Show this message and exit.                   │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ──────────────────────────────────────────────────────────────────╮
-│ collate   Collate raw data into a denormalized format.                      │
-│ tokenize  Tokenize collated data into integer sequences.                    │
-│ winnow    Winnow held-out data for evaluation.                              │
-│ pipeline  Run the full pipeline: collate, tokenize, & winnow.               │
+│ collate           Collate raw data into a denormalized format.              │
+│ tokenize          Tokenize collated data into integer sequences.            │
+│ winnow            Winnow held-out data for evaluation.                      │
+│ pipeline          Run the full pipeline: collate, tokenize, & winnow.       │
+│ combine-datasets  Combine multiple processed datasets into one.             │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -483,7 +484,7 @@ with commands:
 
   ╭─ Options ───────────────────────────────────────────────────────────────────╮
   │    --collation-config     -c      PATH  Collation configuration file        │
-  │                                         (overrides config)                  │
+  │                                         (overrides default)                 │
   │ *  --raw-data-home        -r      TEXT  Raw data directory [required]       │
   │ *  --processed-data-home  -p      TEXT  Processed data directory [required] │
   │    --verbose              -v            Verbose logging for collate; this   │

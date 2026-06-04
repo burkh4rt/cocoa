@@ -243,7 +243,9 @@ class Tokenizer(Configurable):
             .join(
                 self.get_lookup(pt).lazy(), on="to_tokenize", validate="m:1", how="left"
             )
-            .with_columns(pl.col("token").fill_null(0))  # UNK is 0
+            .with_columns(
+                pl.col("token").fill_null(pl.lit(0, dtype=pl.UInt32))
+            )  # UNK is 0
             .group_by("subject_id", maintain_order=True)
             .agg(
                 pl.col("token").alias("tokens"),
@@ -346,7 +348,7 @@ class Tokenizer(Configurable):
         if data.lookup is not None:
             tkzr.lookup = pl.DataFrame(
                 list(dict(data.lookup).items()),
-                schema=["to_tokenize", "token"],
+                schema={"to_tokenize": pl.String, "token": pl.UInt32},
                 orient="row",
             )
         if done_training:
