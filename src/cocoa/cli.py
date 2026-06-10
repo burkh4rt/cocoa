@@ -12,7 +12,6 @@ from typing import Annotated, Optional
 import typer
 from rich import print
 from rich.console import Console
-from rich.table import Table
 
 from cocoa.collator import Collator
 from cocoa.tokenizer import Tokenizer
