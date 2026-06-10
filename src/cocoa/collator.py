@@ -163,7 +163,14 @@ class Collator:
             # if a date was cast to a time,
             # the default of 00:00:00 should be replaced with 23:59:59
             df = df.with_columns(
-                pl.col(time).cast(pl.Datetime).dt.replace(hour=23, minute=59, second=59)
+                pl.when(pl.col(time).cast(pl.Datetime).dt.time() == pl.time(0, 0, 0))
+                .then(
+                    pl.col(time)
+                    .cast(pl.Datetime)
+                    .dt.replace(hour=23, minute=59, second=59)
+                )
+                .otherwise(pl.col(time).cast(pl.Datetime))
+                .alias(time)
             )
         if reference_key is not None:
             df = df.join(self.reference_frame, on=reference_key, how="inner").filter(
