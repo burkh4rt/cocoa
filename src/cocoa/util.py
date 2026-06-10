@@ -25,6 +25,9 @@ def combine_processed_data(
     processed_data_home = pathlib.Path(processed_data_home).expanduser().resolve()
     processed_data_home.mkdir(parents=True, exist_ok=True)
 
+    if not processed_data_homes:
+        raise ValueError("processed_data_homes must contain at least one input directory")
+
     input_dirs = [pathlib.Path(p).expanduser().resolve() for p in processed_data_homes]
     parquets = [f.name for f in input_dirs[0].glob("*.parquet")]
     yamls = [f.name for f in input_dirs[0].glob("*.yaml")]
