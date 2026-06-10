@@ -177,7 +177,9 @@ class Tokenizer:
         """
         if self.cfg.get("insert_spacers", False):
             spcrs = dict(self.cfg.spacers)
-            return df.with_columns(
+            # rows arrive as an unordered concat of entries; diffs to the
+            # previous event are only meaningful on a time-sorted frame
+            return df.sort("subject_id", "time").with_columns(
                 tdiff_mins=(
                     pl.col("time") - pl.col("time").shift(1).over("subject_id")
                 ).dt.total_minutes()
