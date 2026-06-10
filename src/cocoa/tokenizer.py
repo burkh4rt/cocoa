@@ -313,7 +313,7 @@ class Tokenizer:
             return (
                 self.lookup.filter(pl.col("to_tokenize") == word).select("token").item()
             )
-        except ValueError or AttributeError:
+        except (ValueError, AttributeError):
             return 0  # UNK
 
     def __contains__(self, word: str) -> bool:
