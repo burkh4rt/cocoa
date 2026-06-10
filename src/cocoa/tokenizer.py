@@ -29,19 +29,20 @@ class Tokenizer:
     ):
         self.main_cfg = main_cfg
         self.tokenization_cfg = tokenization_cfg
+        loaded_main = OmegaConf.load(
+            pathlib.Path(
+                self.main_cfg if self.main_cfg is not None else "./config/main.yaml"
+            )
+            .expanduser()
+            .resolve()
+        )
         self.cfg = OmegaConf.merge(
-            OmegaConf.load(
-                pathlib.Path(
-                    self.main_cfg if self.main_cfg is not None else "./config/main.yaml"
-                )
-                .expanduser()
-                .resolve()
-            ),
+            loaded_main,
             OmegaConf.load(
                 pathlib.Path(
                     self.tokenization_cfg
                     if self.tokenization_cfg is not None
-                    else main_cfg.tokenization_config
+                    else loaded_main.tokenization_config
                 )
                 .expanduser()
                 .resolve()
