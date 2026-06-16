@@ -376,7 +376,7 @@ entries:
     code: code
     time: recorded_dttm
 
-  # 1st hypotension; map <65mmHg or sbp < 90mmHg
+  # 1st sepsis event
   - table: clif_sofa
     prefix: LABEL
     filter_expr: pl.col("sofa_total") >= 2

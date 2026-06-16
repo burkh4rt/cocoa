@@ -555,7 +555,7 @@ with commands:
 
 - `cocoa pipeline`
 
-  ````
+  ```
   Usage: cocoa pipeline [OPTIONS]
 
   Run the full pipeline: collate, tokenize, & winnow.
@@ -572,11 +572,12 @@ with commands:
   │    --verbose              -v            Verbose logging for pipeline steps  │
   │    --help                 -h            Show this message and exit.         │
   ╰─────────────────────────────────────────────────────────────────────────────╯
-  ```<!-- prettier-ignore-start -->
-  > [!TIP]
-  > For common use cases, check out the [recipes](./recipes/README.md) section!
-  <!-- prettier-ignore-end -->
-  ````
+  ```
+
+<!-- prettier-ignore-start -->
+> [!TIP]
+> For common use cases, check out the [recipes](./recipes/README.md) section!
+<!-- prettier-ignore-end -->
 
 [^1]:
     M. Burkhart, B. Ramadan, Z. Liao, K. Chhikara, J. Rojas, W. Parker, & B.
