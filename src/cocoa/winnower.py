@@ -5,6 +5,7 @@ prepares held-out data for evaluation,
 adding flags to disqualify certain subjects from evaluation
 """
 
+import fnmatch
 import pathlib
 
 import numpy as np
@@ -35,10 +36,18 @@ class Winnower(Configurable):
             pathlib.Path(processed_data_home).expanduser().resolve()
         )
         self.tkzr_cfg = OmegaConf.load(self.processed_data_home / "tokenizer.yaml")
+        self.grokked_outcome_tokens = [
+            x
+            for x in self.tkzr_cfg.lookup.keys()
+            if any(fnmatch.fnmatch(x, p) for p in self.cfg.outcome_tokens)
+        ]
         self.rng = np.random.default_rng(seed=42)
 
         self.logger.info("Winnower initialized...")
         self.logger.info(f"{self.processed_data_home=}")
+        self.logger.info(
+            f"Processed expressions to generate {self.grokked_outcome_tokens=}"
+        )
 
     def load_frame(self, split="held_out") -> pl.LazyFrame:
         """
@@ -142,7 +151,7 @@ class Winnower(Configurable):
                 f"{t}_{tense}": pl.col(f"tokens_{tense}").list.contains(
                     self.tkzr_cfg.lookup[t]
                 )
-                for t in self.cfg.outcome_tokens
+                for t in self.grokked_outcome_tokens
                 for tense in ("past", "future")
             }
         )
@@ -165,10 +174,10 @@ class Winnower(Configurable):
             )
             if verbose:
                 self.logger.info(f"Prepared split {split} for inference:")
-                self.logger.summarize_thresholded(df, self.cfg.outcome_tokens)
+                self.logger.summarize_thresholded(df, self.grokked_outcome_tokens)
 
 
 if __name__ == "__main__":
     self = Winnower(processed_data_home="./processed/mimic/")
     self.save_all(verbose=True)
-    # breakpoint()
+    breakpoint()

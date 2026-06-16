@@ -27,9 +27,10 @@ ordering:
   - CRRT
   - SOFA
   - DSCG
+  - LABEL
   - EOS
 
-insert_spacers: !!bool true
+insert_spacers: !!bool false
 spacers:
   5m-15m: 5 # produces token TIME//5m-15m
   15m-1h: 15

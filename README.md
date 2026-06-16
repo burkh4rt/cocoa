@@ -440,15 +440,16 @@ specifies:
 **Example configuration:**
 
 ```yaml
-outcome_tokens:
-  - XFR-IN//icu
-  - RESP//imv
-  - DSCG//expired
-  - DSCG//hospice
+outcome_tokens: # supports patterns with fnmatch
+  - XFR-IN//icu # ICU transfer
+  - RESP//imv # invasive mechanical ventillation event
+  - DSCG//expired # discharge due to death
+  - LABEL//* # any kind of label token
 threshold:
   # choose one and only one of the following
   # duration_s: !!int 86400 # 24h
-  first_occurrence: XFR-IN//icu
+  # first_occurrence: XFR-IN//icu
+  uniform_random: !!bool True
 
 horizon_after_threshold_s: !!int 2592000 # 30d outcome window after prediction threshold
 ```
