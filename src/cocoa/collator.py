@@ -58,6 +58,7 @@ class Collator(Configurable):
         with_col_expr: str | list = None,
         key: str = None,
         subject_id_str: str = None,
+        time: str = None,
         **kwargs,
     ) -> pl.LazyFrame:
         """
@@ -91,10 +92,14 @@ class Collator(Configurable):
                 else [self.slightly_safer_eval(c) for c in with_col_expr]
             )
         if agg_expr is not None:
-            df = df.group_by(key if key is not None else self.cfg["subject_id"]).agg(
-                self.slightly_safer_eval(agg_expr)
-                if isinstance(agg_expr, str)
-                else [self.slightly_safer_eval(c) for c in agg_expr]
+            df = (
+                df.sort(time)
+                .group_by(key if key is not None else self.cfg["subject_id"])
+                .agg(
+                    self.slightly_safer_eval(agg_expr)
+                    if isinstance(agg_expr, str)
+                    else [self.slightly_safer_eval(c) for c in agg_expr]
+                )
             )
         return df
 
@@ -129,6 +134,8 @@ class Collator(Configurable):
         reference_key: str = None,
         subject_id_str: str = None,
         fix_date_to_time: bool = None,
+        agg_expr: str | list = None,
+        key: str = None,
     ) -> pl.LazyFrame:
         """create tokens corresponding to a configured event"""
         df = (
@@ -136,9 +143,12 @@ class Collator(Configurable):
             if table == "REFERENCE"
             else self.load_table(
                 table=table,
+                time=time,
                 filter_expr=filter_expr,
                 with_col_expr=with_col_expr,
                 subject_id_str=subject_id_str,
+                agg_expr=agg_expr,
+                key=key,
             )
         )
         if fix_date_to_time:
@@ -250,7 +260,18 @@ class Collator(Configurable):
         except Exception as e:
             self.logger.warning(f"Streaming write failed: {e}")
             df_all.sink_parquet(meds_path, engine="in-memory", mkdir=True)
-        (df_splits := self.get_subject_splits()).write_parquet(
+        df_splits = self.get_subject_splits()
+        if "pass_through_columns" in self.cfg:
+            df_splits = df_splits.join(
+                self.reference_frame.select(
+                    pl.col(self.cfg["subject_id"]).alias("subject_id"),
+                    *self.cfg.pass_through_columns,
+                ).collect(),
+                on="subject_id",
+                how="inner",
+                validate="1:1",
+            )
+        df_splits.write_parquet(
             self.processed_data_home / "subject_splits.parquet", mkdir=True
         )
 
@@ -260,9 +281,9 @@ class Collator(Configurable):
 
 if __name__ == "__main__":
     self = Collator(
-        raw_data_home="./raw_data/raw-mimic/dev/",
+        raw_data_home="./raw-data/raw-mimic/dev/",
         processed_data_home="./processed/mimic/",
     )
     self.save_all(verbose=True)
-    # print(self.get_subject_splits())
+    print(self.get_subject_splits())
     # breakpoint()

@@ -21,7 +21,9 @@ from cocoa.winnower import Winnower
 __version__ = version("cocoa")
 
 app = typer.Typer(
-    name="cocoa", help=f"Configurable collation and tokenization (v{__version__})"
+    name="cocoa",
+    help=f"Configurable collation and tokenization (v{__version__})",
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 console = Console()
 

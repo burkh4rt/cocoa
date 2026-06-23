@@ -1,10 +1,3 @@
-[![DOI](img/1174829117.svg)](https://doi.org/10.5281/zenodo.20413460)
-[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/bbj-lab/cocoa/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/bbj-lab/cocoa)
-
-# Cocoa: a configurable collator
-
-> ☕️ Chicago's second favorite bean
-
 <p align="center">
 <img src="img/cocoa-bean.png" alt="cocoa bean" width="400" style="display: block;
 margin: 0 auto; -webkit-mask-image: radial-gradient(
@@ -18,6 +11,13 @@ margin: 0 auto; -webkit-mask-image: radial-gradient(
     rgba(0,0,0,0) 100%
   );"/>
 </p>
+
+# Cocoa: a configurable collator
+
+[![DOI](img/1174829117.svg)](https://doi.org/10.5281/zenodo.20413460)
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/bbj-lab/cocoa/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/bbj-lab/cocoa)
+
+> ☕️ Chicago's second favorite bean
 
 ## About
 
@@ -56,9 +56,9 @@ specifies:
   itself via `table: REFERENCE`) to the output schema. Each entry declares which
   column provides the `code`, `time`, and optionally `numeric_value`, and
   `text_value`. Codes can be given a prefix `prefix`. Some preprocessing can be
-  done with optional entries for `filter_expr` and `with_col_expr`. These take
-  the form of polars expressions that are evaluated and applied to the dataframe
-  during loading. _Mild checks are performed when evaluating these expressions,
+  done with optional entries for `filter_expr`, `with_col_expr`, `agg_expr`, and
+  `key`. These take the form of polars expressions that are evaluated and applied
+  to the dataframe during loading. _Mild checks are performed when evaluating these expressions,
   but in general, the yaml config is just as powerful as the python. Check all
   yaml files prior to use._
 - **Subject splits** (`train_frac` / `tuning_frac`) that partition subjects
@@ -110,6 +110,26 @@ reference:
   frame. Each needs a `key` to join on and a `validation` mode (e.g. `"m:1"`).
   You can also add computed columns via `with_col_expr`.
 
+### Pass-through columns
+
+The `pass_through_columns` option allows you to preserve static columns from the
+reference table and include them in the output files. This is useful for
+demographic and contextual data that should accompany the collated events:
+
+```yaml
+pass_through_columns:
+  - age_at_admission
+  - admission_type_category
+  ...
+```
+
+Columns specified in this list will be copied from the reference table to:
+
+- `subject_splits.parquet`
+- `*_for_inference.parquet` files (e.g., `train_for_inference.parquet`,
+  `tuning_for_inference.parquet`, `held_out_for_inference.parquet`) — for use in
+  downstream tasks where you may need subject metadata alongside predictions
+
 ### Entries
 
 The `entries` list defines the events to extract. Every entry produces rows with
@@ -133,6 +153,8 @@ entry's fields tell the collator which source columns map to these outputs.
 | `text_value`    | Column to use as the text value for the event.                                                                                   |
 | `filter_expr`   | A Polars expression (or list of expressions) to filter rows before extraction.                                                   |
 | `with_col_expr` | A Polars expression (or list) to add computed columns before extraction.                                                         |
+| `agg_expr`      | A Polars aggregation expression (or list) applied via `group_by(...).agg(...)` before extraction.                                |
+| `key`           | Grouping key used with `agg_expr`. Defaults to `subject_id` when not provided.                                                   |
 | `reference_key` | Join the source table to the reference frame on this key and keep only rows within the subject's `start_time`–`end_time` window. |
 
 **Examples:**
@@ -185,6 +207,20 @@ entry's fields tell the collator which source columns map to these outputs.
     code: med_category
     numeric_value: med_dose_converted
     time: admin_dttm
+  ```
+
+- Pre-aggregating events before token extraction with `agg_expr`:
+
+  ```yaml
+  - table: clif_crrt_therapy
+    prefix: LABEL
+    filter_expr: pl.col("crrt_mode_category").is_not_null()
+    with_col_expr: pl.lit("crrt_init").alias("code")
+    agg_expr:
+      - pl.col("code").first()
+      - pl.col("recorded_dttm").first()
+    code: code
+    time: recorded_dttm
   ```
 
 - Creating a computed column with `with_col_expr` to use as the code:
@@ -404,15 +440,16 @@ specifies:
 **Example configuration:**
 
 ```yaml
-outcome_tokens:
-  - XFR-IN//icu
-  - RESP//imv
-  - DSCG//expired
-  - DSCG//hospice
+outcome_tokens: # supports patterns with fnmatch
+  - XFR-IN//icu # ICU transfer
+  - RESP//imv # invasive mechanical ventilation event
+  - DSCG//expired # discharge due to death
+  - LABEL//* # any kind of label token
 threshold:
   # choose one and only one of the following
   # duration_s: !!int 86400 # 24h
-  first_occurrence: XFR-IN//icu
+  # first_occurrence: XFR-IN//icu
+  uniform_random: !!bool True
 
 horizon_after_threshold_s: !!int 2592000 # 30d outcome window after prediction threshold
 ```
@@ -469,7 +506,7 @@ with commands:
   │    --verbose              -v            Verbose logging for collate; this   │
   │                                         may cause memory issues with large  │
   │                                         datasets                            │
-  │    --help                               Show this message and exit.         │
+  │    --help                 -h            Show this message and exit.         │
   ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
@@ -492,7 +529,7 @@ with commands:
   │    --verbose              -v            Verbose logging for collate; this   │
   │                                         may cause memory issues with large  │
   │                                         datasets                            │
-  │    --help                               Show this message and exit.         │
+  │    --help                 -h            Show this message and exit.         │
   ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
@@ -512,7 +549,7 @@ with commands:
   │ *  --processed-data-home  -p      TEXT  Processed data directory [required] │
   │    --verbose              -v            Verbose logging for winnow; prints  │
   │                                         summary statistics                  │
-  │    --help                               Show this message and exit.         │
+  │    --help                 -h            Show this message and exit.         │
   ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
@@ -533,7 +570,7 @@ with commands:
   │ *  --raw-data-home        -r      TEXT  Raw data directory [required]       │
   │ *  --processed-data-home  -p      TEXT  Processed data directory [required] │
   │    --verbose              -v            Verbose logging for pipeline steps  │
-  │    --help                               Show this message and exit.         │
+  │    --help                 -h            Show this message and exit.         │
   ╰─────────────────────────────────────────────────────────────────────────────╯
   ```
 
