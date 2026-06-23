@@ -143,6 +143,7 @@ class Collator(Configurable):
             if table == "REFERENCE"
             else self.load_table(
                 table=table,
+                time=time,
                 filter_expr=filter_expr,
                 with_col_expr=with_col_expr,
                 subject_id_str=subject_id_str,
