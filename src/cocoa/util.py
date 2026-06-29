@@ -26,7 +26,9 @@ def combine_processed_data(
     processed_data_home.mkdir(parents=True, exist_ok=True)
 
     input_dirs = [pathlib.Path(p).expanduser().resolve() for p in processed_data_homes]
-    parquets = [f.name for f in input_dirs[0].glob("*.parquet")]
+    parquets = [
+        f.name for f in input_dirs[0].glob("*.parquet") if "_tokens_times" not in f.name
+    ]  # "{split}_tokens_times.parquet" files are recreated as needed
     yamls = [f.name for f in input_dirs[0].glob("*.yaml")]
 
     for f in yamls:
@@ -85,5 +87,7 @@ def combine_processed_data(
                 [pl.col(k).cast(pl.List(pl.UInt32)) for k in tk_cols]
             ).with_row_index("_idx").with_columns(
                 pl.col("_idx").hash(seed=42).alias("_rand")  # deterministic shuffle
-            ).sort("_rand").drop(["_rand", "_idx"]).sink_parquet(processed_data_home / f)
+            ).sort("_rand").drop(["_rand", "_idx"]).sink_parquet(
+                processed_data_home / f
+            )
     return str(processed_data_home)
